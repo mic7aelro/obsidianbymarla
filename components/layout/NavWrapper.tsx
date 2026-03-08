@@ -5,6 +5,6 @@ import Nav from './Nav'
 
 export default function NavWrapper() {
   const pathname = usePathname()
-  if (pathname === '/') return null
+  if (pathname === '/' || pathname.startsWith('/admin')) return null
   return <Nav />
 }

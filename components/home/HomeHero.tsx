@@ -2,14 +2,15 @@
 
 import { useEffect, useRef } from 'react'
 import Image from 'next/image'
-import Link from 'next/link'
 import { gsap } from 'gsap'
+import { useTransition } from '@/providers/PageTransitionProvider'
 
 export default function HomeHero() {
   const quoteRef = useRef<HTMLQuoteElement>(null)
   const statementRef = useRef<HTMLDivElement>(null)
-  const ctaRef = useRef<HTMLAnchorElement>(null)
+  const ctaRef = useRef<HTMLDivElement>(null)
   const portraitRef = useRef<HTMLDivElement>(null)
+  const { navigate } = useTransition()
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -108,24 +109,31 @@ export default function HomeHero() {
           </p>
         </div>
 
-        <Link
-          ref={ctaRef}
-          href="/work"
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: '10px',
-            letterSpacing: '0.35em',
-            textTransform: 'uppercase',
-            color: '#fff',
-            opacity: 0.6,
-            display: 'inline-block',
-            transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-          onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}
-        >
-          View Work &rarr;
-        </Link>
+        <div ref={ctaRef}>
+          <button
+            onClick={() => navigate('/work', true)}
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: '10px',
+              letterSpacing: '0.35em',
+              textTransform: 'uppercase',
+              color: '#fff',
+              opacity: 0.6,
+              display: 'inline-block',
+              transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: 0,
+              WebkitAppearance: 'none',
+              appearance: 'none',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}
+          >
+            View Work &rarr;
+          </button>
+        </div>
       </div>
 
       {/* Right — portrait, full height */}

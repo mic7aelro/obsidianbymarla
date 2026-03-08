@@ -4,6 +4,7 @@ import { cormorant, dmSans } from '@/lib/fonts'
 import GrainOverlay from '@/components/layout/GrainOverlay'
 import NavWrapper from '@/components/layout/NavWrapper'
 import SmoothScrollProvider from '@/providers/SmoothScrollProvider'
+import PageTransitionProvider from '@/providers/PageTransitionProvider'
 
 export const metadata: Metadata = {
   title: 'Marla McLeod — Fashion Stylist & Photographer',
@@ -17,8 +18,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         <GrainOverlay />
         <SmoothScrollProvider>
-          <NavWrapper />
-          <main>{children}</main>
+          <PageTransitionProvider>
+            <NavWrapper />
+            <main>{children}</main>
+          </PageTransitionProvider>
         </SmoothScrollProvider>
       </body>
     </html>

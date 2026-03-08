@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Icon } from '@iconify/react'
+import { useTransition } from '@/providers/PageTransitionProvider'
 
 const links = [
   { href: '/work', label: 'Work' },
@@ -28,6 +29,7 @@ export default function Nav() {
   const navRef = useRef<HTMLElement>(null)
   const lastY = useRef(0)
   const [menuOpen, setMenuOpen] = useState(false)
+  const { navigate } = useTransition()
 
   // Close menu on route change
   useEffect(() => { setMenuOpen(false) }, [pathname])
@@ -98,14 +100,14 @@ export default function Nav() {
           >
             {links.map(({ href, label }) => (
               <li key={href}>
-                <Link
-                  href={href}
-                  style={navLinkStyle(pathname === href)}
+                <button
+                  onClick={() => navigate(href)}
+                  style={{ ...navLinkStyle(pathname === href), background: 'none', border: 'none', cursor: 'pointer', WebkitAppearance: 'none', appearance: 'none' }}
                   onMouseEnter={e => (e.currentTarget.style.opacity = pathname === href ? '1' : '0.8')}
                   onMouseLeave={e => (e.currentTarget.style.opacity = pathname === href ? '1' : '0.5')}
                 >
                   {label}
-                </Link>
+                </button>
               </li>
             ))}
           </ul>
@@ -210,8 +212,8 @@ export default function Nav() {
         <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
           {links.map(({ href, label }) => (
             <li key={href}>
-              <Link
-                href={href}
+              <button
+                onClick={() => { setMenuOpen(false); navigate(href) }}
                 style={{
                   fontFamily: 'var(--font-display)',
                   fontSize: 'clamp(3rem, 12vw, 6rem)',
@@ -223,10 +225,16 @@ export default function Nav() {
                   opacity: pathname === href ? 1 : 0.45,
                   transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
                   lineHeight: 1,
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
                 }}
               >
                 {label}
-              </Link>
+              </button>
             </li>
           ))}
         </ul>
