@@ -75,34 +75,39 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
         </div>
       </div>
 
-      {/* Gallery — placeholder grid for additional images */}
+      {/* Gallery */}
       {project.images && project.images.length > 0 && (
         <div
           style={{
             padding: '6rem 2.5rem',
             display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gridAutoRows: '40vw',
             gap: '1.5rem',
           }}
         >
-          {project.images.map((src, i) => (
-            <div
-              key={i}
-              style={{
-                position: 'relative',
-                aspectRatio: '3 / 4',
-                background: '#111',
-              }}
-            >
-              <Image
-                src={src}
-                alt={`${project.title} — image ${i + 1}`}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                style={{ objectFit: 'cover' }}
-              />
-            </div>
-          ))}
+          {project.images.map((img, i) => {
+            const isLandscape = img.width > img.height
+            return (
+              <div
+                key={i}
+                style={{
+                  gridColumn: isLandscape ? 'span 2' : 'span 1',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  background: '#111',
+                }}
+              >
+                <Image
+                  src={img.src}
+                  alt={`${project.title} — image ${i + 1}`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  style={{ objectFit: 'cover' }}
+                />
+              </div>
+            )
+          })}
         </div>
       )}
 

@@ -1,3 +1,9 @@
+export interface ProjectImage {
+  src: string
+  width: number
+  height: number
+}
+
 export interface Project {
   slug: string
   title: string
@@ -5,5 +11,5 @@ export interface Project {
   category: string
   image: string
   coverAlt: string
-  images?: string[]
+  images?: ProjectImage[]
 }

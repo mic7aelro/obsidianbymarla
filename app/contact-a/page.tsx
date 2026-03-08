@@ -3,7 +3,12 @@
 import { Suspense } from 'react'
 import ContactForm from '@/components/contact/ContactForm'
 
-export default function ContactPage() {
+// Option A — Split layout
+// Left: editorial identity (title, location, Instagram, prose)
+// Right: form
+// Equal columns, full viewport height
+
+export default function ContactAPage() {
   return (
     <div
       style={{
@@ -52,17 +57,38 @@ export default function ContactPage() {
           </p>
         </div>
 
-        <p
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: '9px',
-            letterSpacing: '0.35em',
-            textTransform: 'uppercase',
-            opacity: 0.35,
-          }}
-        >
-          Miami
-        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+          <p
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: '9px',
+              letterSpacing: '0.35em',
+              textTransform: 'uppercase',
+              opacity: 0.35,
+            }}
+          >
+            New York
+          </p>
+          <a
+            href="https://www.instagram.com/marlizzlle/"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: '9px',
+              letterSpacing: '0.35em',
+              textTransform: 'uppercase',
+              color: '#fff',
+              opacity: 0.35,
+              textDecoration: 'none',
+              transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.opacity = '0.8')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '0.35')}
+          >
+            Instagram
+          </a>
+        </div>
       </div>
 
       {/* Right — form */}
