@@ -86,7 +86,7 @@ export default function ServicesPage() {
                 <div style={{
                   width: '100%',
                   height: '1px',
-                  background: 'rgba(255,255,255,0.18)',
+                  background: 'rgba(255,255,255,0.35)',
                   marginBottom: '4rem',
                 }} />
               )}
@@ -112,8 +112,6 @@ export default function ServicesPage() {
                       gridTemplateColumns: '1fr auto',
                       gap: '1rem',
                       alignItems: 'start',
-                      borderTop: '1px solid rgba(255,255,255,0.08)',
-                      paddingTop: '1.75rem',
                     }}
                   >
                     <div>
