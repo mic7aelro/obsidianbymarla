@@ -124,6 +124,8 @@ export default function Nav() {
               display: 'none', // overridden by .mobile-only in CSS
               flexDirection: 'column',
               gap: '5px',
+              WebkitAppearance: 'none',
+              appearance: 'none',
             }}
           >
             <span style={{

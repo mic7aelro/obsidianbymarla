@@ -86,7 +86,7 @@ export default function ServicesPage() {
                 <div style={{
                   width: '100%',
                   height: '1px',
-                  background: '#fff',
+                  background: 'rgba(255,255,255,0.35)',
                   marginBottom: '4rem',
                 }} />
               )}
