@@ -126,6 +126,8 @@ export default function Nav() {
               gap: '5px',
               WebkitAppearance: 'none',
               appearance: 'none',
+              WebkitTapHighlightColor: 'transparent',
+              outline: 'none',
             }}
           >
             <span style={{
