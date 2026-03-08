@@ -141,32 +141,12 @@ Images go in `public/images/projects/[slug]/`. Placeholders are dark `#111` divs
 
 ---
 
-## Booking system (future phases)
-
-The goal is a full in-site booking + payment flow. Keeping users in the branded experience is intentional — no redirecting to Calendly or external forms.
-
-### Phase A — Booking form (in scope next)
-- `/contact` and each service link to a booking form
-- Fields: Name, Email, Phone (optional), Service type (select), Preferred dates, Message/vision
-- On submit: sends notification email to Marla, sends confirmation email to client
-- No payment at this stage — just lead capture
-
-### Phase B — Calendar availability
-- Marla can block/open dates via a simple admin view
-- Client selects from available slots during booking
-- Stack options: Cal.com (self-hosted or API), or a custom availability table in a DB
-
-### Phase C — Stripe + invoicing
-- Client selects service → sees price → pays deposit or full amount via Stripe
-- On successful payment: generate PDF invoice, email to client, log in dashboard
-- Stripe webhooks confirm payment before booking is confirmed
-
 ---
 
-## What's built (Phase 1 + 2 done)
+## What's built
 
 - [x] Black canvas, grain overlay, no white flash
-- [x] Fixed transparent nav — wordmark + links
+- [x] Fixed transparent nav — wordmark + links, gradient scrim for legibility
 - [x] Cormorant Garamond display type + DM Sans body
 - [x] Work index page with 2-column ProjectGrid
 - [x] LCP-safe HeroImage with black overlay
@@ -174,35 +154,58 @@ The goal is a full in-site booking + payment flow. Keeping users in the branded 
 - [x] Staggered card reveal animations on scroll
 - [x] Hero parallax (0.8× scroll rate)
 - [x] LookbookStrip component (horizontal scroll)
+- [x] Individual project pages at `/work/[slug]` — full-bleed hero + 4-column gallery grid (landscape images span 2 cols), `ProjectImage` type with explicit dimensions
+- [x] Services page — sticky/scroll split layout (identity left, service list right scrollable)
+- [x] Contact page — two-column editorial split (headline + location left, booking form right)
 
 ---
 
 ## What still needs building
 
-### Phase 3 — Project pages + route transitions
-- Individual project page at `/work/[slug]`
-- Full-bleed hero (100vw × 100vh, no chrome) on project open
-- Sparse metadata: name, year, category in small uppercase
-- Horizontal image strip for supporting photos
-- Route transitions — black overlay fade, min 400ms
-- Clicking a project card: full-screen takeover, then page reveals (black overlay wipe is preferred over GSAP Flip — safer with App Router)
-
 ### Phase 4 — Cursor + micro-interactions
 - Custom cursor: 8px dot, expands + shows "VIEW" on image hover
 - Cursor hidden on mobile/touch
-- Nav hide on scroll-down / show on scroll-up
+- [x] Nav hide on scroll-down / show on scroll-up
 - Nav link hover: opacity 0.4 → 1.0 only, no fills or underlines
 
 ### Phase 5 — Remaining pages + mobile
 - `/` (home) — Psalm 139:14 full-width display type + artist statement prose
 - `/about` — editorial portrait placeholder + bio prose
-- `/services` — prose intro + package list (see Site copy above)
-- `/contact` — booking form + Instagram + "New York"
 - Mobile nav: hamburger → full-screen black overlay with large-type nav items
 - Project grid: single column on mobile
 - Branded loading screen: black, "MARLA McLEOD" fades in → holds → fades out
+- [x] `/services` — sticky/scroll split layout
+- [x] `/contact` — two-column editorial split, booking form
 
-### Phase 6 — Booking + payments (see Booking system section)
+### Phase 6 — Booking system
+
+**Stack:** MongoDB Atlas (free tier) + Vercel + Cal.com (hosted at cal.com/marlizzlle) + out-of-band payment (Venmo/Zelle/bank transfer). Stripe slots in later at the deposit step without touching anything else.
+
+**Full flow:**
+Inquiry submitted → Marla notified → Admin reviews → Creates event → Invoice emailed (with payment instructions) → Marla manually marks deposit paid → Event confirmed
+
+#### Phase 6A — Inquiry capture
+- Contact form submits to MongoDB
+- Email notification to Marla on new inquiry (use Resend or Nodemailer)
+- Confirmation email to client
+
+#### Phase 6B — Cal.com consultation booking
+- Embed Cal.com widget on the contact page for initial consultation slot picking
+- Cal.com handles availability; Marla manages her calendar on cal.com dashboard
+- Use hosted cal.com/marlizzlle — zero infra, can style embed to match aesthetic
+
+#### Phase 6C — Admin portal (`/admin`)
+- Auth: simple session-based, hardcoded credentials (no OAuth needed at this scale)
+- **Inquiries tab** — all submissions with status badge: `pending → reviewed → awaiting deposit → confirmed → completed`
+- **"Create event" button** on each inquiry → moves to Events tab
+- **Events tab** — date, client, service, deposit status
+- **"Mark deposit paid" button** → status flips to confirmed
+- **"Send invoice" button** → emails invoice with payment instructions (plain styled email or PDF via `@react-pdf/renderer`)
+
+#### Phase 6D — Stripe (future)
+- Replace "Mark deposit paid" manual step with Stripe payment link
+- Webhook auto-confirms on successful payment
+- Deposit amount = 10% of service price
 
 ---
 

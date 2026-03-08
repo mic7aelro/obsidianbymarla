@@ -18,7 +18,8 @@ export default function ContactPage() {
           padding: '10rem 4rem 6rem 2.5rem',
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
+          gap: '2rem',
           borderRight: '1px solid rgba(255,255,255,0.06)',
         }}
       >
@@ -34,7 +35,7 @@ export default function ContactPage() {
               marginBottom: '3rem',
             }}
           >
-            Let&apos;s<br />Work<br />Together
+            Contact
           </h1>
 
           <p
@@ -44,25 +45,25 @@ export default function ContactPage() {
               lineHeight: 1.8,
               opacity: 0.55,
               maxWidth: '360px',
-              marginBottom: '4rem',
+              marginBottom: '2.5rem',
             }}
           >
             Available for editorial, wedding, commercial, and personal styling work.
             Custom packages on request.
           </p>
-        </div>
 
-        <p
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: '9px',
-            letterSpacing: '0.35em',
-            textTransform: 'uppercase',
-            opacity: 0.35,
-          }}
-        >
-          Miami
-        </p>
+          <p
+            style={{
+              fontFamily: 'var(--font-sans)',
+              fontSize: '9px',
+              letterSpacing: '0.35em',
+              textTransform: 'uppercase',
+              opacity: 0.35,
+            }}
+          >
+            Services available in the Greater Miami area
+          </p>
+        </div>
       </div>
 
       {/* Right — form */}

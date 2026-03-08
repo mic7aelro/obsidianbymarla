@@ -1,4 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Resend } from 'resend'
+import clientPromise from '@/lib/mongodb'
+import {
+  inquiryNotificationHtml,
+  inquiryNotificationText,
+} from '@/lib/emails/inquiryNotification'
+import {
+  inquiryConfirmationHtml,
+  inquiryConfirmationText,
+} from '@/lib/emails/inquiryConfirmation'
+import type { Inquiry } from '@/types/inquiry'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
@@ -8,16 +21,45 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
-  // TODO: wire up email provider (Resend, SendGrid, etc.)
-  // Example with Resend:
-  // await resend.emails.send({
-  //   from: 'noreply@marlamcleod.com',
-  //   to: process.env.CONTACT_EMAIL!,
-  //   subject: `New inquiry from ${name} — ${service}`,
-  //   text: `Name: ${name}\nEmail: ${email}\nPhone: ${phone}\nService: ${service}\n\n${message}`,
-  // })
+  const now = new Date()
+  const inquiry: Omit<Inquiry, '_id'> = {
+    name,
+    email,
+    phone: phone || undefined,
+    service,
+    message,
+    status: 'pending',
+    createdAt: now,
+    updatedAt: now,
+  }
 
-  console.log('Contact form submission:', { name, email, phone, service, message })
+  try {
+    // Save to MongoDB
+    const client = await clientPromise
+    const db = client.db(process.env.MONGODB_DB ?? 'marla')
+    await db.collection('inquiries').insertOne(inquiry)
 
-  return NextResponse.json({ ok: true })
+    // Send notification to Marla
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL!,
+      to: process.env.MARLA_EMAIL!,
+      subject: `New inquiry — ${name} (${service})`,
+      html: inquiryNotificationHtml({ name, email, phone, service, message }),
+      text: inquiryNotificationText({ name, email, phone, service, message }),
+    })
+
+    // Send confirmation to client
+    await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL!,
+      to: email,
+      subject: 'Your inquiry has been received',
+      html: inquiryConfirmationHtml({ name, service }),
+      text: inquiryConfirmationText({ name, service }),
+    })
+
+    return NextResponse.json({ ok: true })
+  } catch (err) {
+    console.error('[contact] error:', err)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

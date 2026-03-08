@@ -13,7 +13,7 @@ const links = [
 
 const navLinkStyle = (active: boolean) => ({
   fontFamily: 'var(--font-sans)',
-  fontSize: '10px',
+  fontSize: '12px',
   fontWeight: 400,
   letterSpacing: '0.3em',
   textTransform: 'uppercase' as const,
@@ -101,7 +101,7 @@ export default function Nav() {
         href="/"
         style={{
           fontFamily: 'var(--font-display)',
-          fontSize: '13px',
+          fontSize: '15px',
           fontWeight: 300,
           letterSpacing: '0.25em',
           textTransform: 'uppercase',
@@ -132,7 +132,7 @@ export default function Nav() {
           onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
           onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}
         >
-          <Icon icon="mdi:instagram" width={18} height={18} />
+          <Icon icon="mdi:instagram" width={22} height={22} />
         </a>
       </div>
     </nav>

@@ -1,7 +1,9 @@
-'use client'
-
 import { Suspense } from 'react'
 import ContactForm from '@/components/contact/ContactForm'
+
+export const metadata = {
+  title: 'Contact A — Marla McLeod',
+}
 
 // Option A — Split layout
 // Left: editorial identity (title, location, Instagram, prose)
