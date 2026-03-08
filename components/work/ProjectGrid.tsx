@@ -1,0 +1,19 @@
+import { projects } from '@/data/projects'
+import ProjectCard from './ProjectCard'
+
+export default function ProjectGrid() {
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',
+        gap: '4rem 2.5rem',
+        padding: '0 2.5rem 8rem',
+      }}
+    >
+      {projects.map((project, i) => (
+        <ProjectCard key={project.slug} project={project} index={i} />
+      ))}
+    </div>
+  )
+}
