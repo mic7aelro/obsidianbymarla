@@ -133,19 +133,22 @@ export default function Nav() {
             }}
           >
             <span style={{
-              display: 'block', width: '26px', height: '2px', background: '#ffffff',
+              display: 'block', width: '26px', height: '2px', background: '#fff',
               opacity: 1,
+              position: 'relative', zIndex: 1,
               transform: menuOpen ? 'translateY(6px) rotate(45deg)' : 'none',
               transition: 'transform 400ms cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
             <span style={{
-              display: 'block', width: '26px', height: '2px', background: '#ffffff',
+              display: 'block', width: '26px', height: '2px', background: '#fff',
+              position: 'relative', zIndex: 1,
               opacity: menuOpen ? 0 : 1,
               transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
             <span style={{
-              display: 'block', width: '26px', height: '2px', background: '#ffffff',
+              display: 'block', width: '26px', height: '2px', background: '#fff',
               opacity: 1,
+              position: 'relative', zIndex: 1,
               transform: menuOpen ? 'translateY(-6px) rotate(-45deg)' : 'none',
               transition: 'transform 400ms cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
