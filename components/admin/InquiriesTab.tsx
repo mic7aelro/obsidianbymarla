@@ -76,7 +76,7 @@ function StatusSelect({
       onChange={(e) => onChange(e.target.value as InquiryStatus)}
       style={{
         background: '#111',
-        border: '1px solid rgba(255,255,255,0.12)',
+        border: '1px solid #2a2a2a',
         color: '#fff',
         fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
         fontSize: '9px',
@@ -85,6 +85,9 @@ function StatusSelect({
         padding: '6px 10px',
         cursor: 'pointer',
         outline: 'none',
+        WebkitAppearance: 'none',
+        appearance: 'none',
+        colorScheme: 'dark',
       }}
     >
       {STATUS_ORDER.map((s) => (
@@ -141,7 +144,7 @@ export default function InquiriesTab({ onEventCreated }: { onEventCreated: () =>
             key={inquiry._id}
             style={{
               background: '#0a0a0a',
-              border: '1px solid rgba(255,255,255,0.06)',
+              border: '1px solid #1a1a1a',
               padding: '28px 32px',
               display: 'grid',
               gridTemplateColumns: '1fr 1fr 1fr auto',

@@ -171,8 +171,8 @@ export default function Nav() {
           Marla Chelsea McLeod
         </Link>
 
-        {/* Right — Instagram icon */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', pointerEvents: 'all' }}>
+        {/* Right — Instagram icon (desktop only) */}
+        <div className="desktop-only" style={{ display: 'flex', justifyContent: 'flex-end', pointerEvents: 'all' }}>
           <a
             href="https://www.instagram.com/marlizzlle/"
             target="_blank"

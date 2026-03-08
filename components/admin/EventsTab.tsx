@@ -93,7 +93,7 @@ export default function EventsTab() {
           key={event._id}
           style={{
             background: '#0a0a0a',
-            border: '1px solid rgba(255,255,255,0.06)',
+            border: '1px solid #1a1a1a',
             padding: '28px 32px',
             display: 'grid',
             gridTemplateColumns: '1fr 1fr 1fr auto',

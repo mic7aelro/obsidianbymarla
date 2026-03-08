@@ -42,6 +42,22 @@ export default function AdminLoginPage() {
         justifyContent: 'center',
       }}
     >
+      <a
+        href="/"
+        style={{
+          position: 'fixed',
+          top: '28px',
+          left: '32px',
+          fontFamily: 'var(--font-sans)',
+          fontSize: '9px',
+          letterSpacing: '0.35em',
+          textTransform: 'uppercase',
+          color: 'rgba(255,255,255,0.35)',
+          textDecoration: 'none',
+        }}
+      >
+        Home
+      </a>
       <div style={{ width: '100%', maxWidth: '380px', padding: '0 24px' }}>
         <p
           style={{

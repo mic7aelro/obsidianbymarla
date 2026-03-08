@@ -36,7 +36,7 @@ export default function AdminShell() {
       {/* Header */}
       <header
         style={{
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          borderBottom: '1px solid #1e1e1e',
           padding: '24px 40px',
           display: 'flex',
           alignItems: 'center',
