@@ -169,7 +169,7 @@ Images go in `public/images/projects/[slug]/`. Placeholders are dark `#111` divs
 - Nav link hover: opacity 0.4 → 1.0 only, no fills or underlines
 
 ### Phase 5 — Remaining pages + mobile
-- `/` (home) — Psalm 139:14 full-width display type + artist statement prose
+- [x] `/` (home) — Psalm quote + artist statement, two-column with portrait photo (placeholder at `public/images/marla-pfp.jpg`)
 - `/about` — editorial portrait placeholder + bio prose
 - Mobile nav: hamburger → full-screen black overlay with large-type nav items
 - Project grid: single column on mobile

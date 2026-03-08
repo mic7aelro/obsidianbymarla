@@ -6,6 +6,7 @@ import ContactForm from '@/components/contact/ContactForm'
 export default function ContactPage() {
   return (
     <div
+      className="two-col-grid"
       style={{
         minHeight: '100vh',
         display: 'grid',
@@ -14,15 +15,26 @@ export default function ContactPage() {
     >
       {/* Left — identity */}
       <div
+        className="mobile-pad"
         style={{
-          padding: '10rem 4rem 6rem 2.5rem',
+          padding: '10rem 7rem 6rem 2.5rem',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           gap: '2rem',
-          borderRight: '1px solid rgba(255,255,255,0.06)',
+          borderRight: 'none',
+          position: 'relative',
         }}
       >
+        {/* Inset divider line — starts and ends away from page edges */}
+        <div style={{
+          position: 'absolute',
+          right: 0,
+          top: '4rem',
+          bottom: '1rem',
+          width: '1px',
+          background: 'rgba(255,255,255,0.06)',
+        }} />
         <div>
           <h1
             style={{
@@ -68,6 +80,7 @@ export default function ContactPage() {
 
       {/* Right — form */}
       <div
+        className="mobile-pad"
         style={{
           padding: '10rem 2.5rem 6rem 4rem',
           display: 'flex',

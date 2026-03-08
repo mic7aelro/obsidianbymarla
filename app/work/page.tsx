@@ -7,7 +7,7 @@ export const metadata = {
 export default function WorkPage() {
   return (
     <>
-      <div style={{ padding: '7rem 2.5rem 0' }}>
+      <div className="mobile-pad-top" style={{ padding: '7rem 2.5rem 0' }}>
         <h1
           style={{
             fontFamily: 'var(--font-display)',

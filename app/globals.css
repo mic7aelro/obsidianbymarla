@@ -39,3 +39,15 @@ a {
   max-width: 560px;
   opacity: 0.75;
 }
+
+/* ─── Mobile responsive helpers ─── */
+.mobile-only { display: none !important; }
+
+@media (max-width: 768px) {
+  .desktop-only { display: none !important; }
+  .mobile-only { display: flex !important; }
+  .two-col-grid { grid-template-columns: 1fr !important; }
+  .sticky-panel { position: static !important; height: auto !important; }
+  .mobile-pad { padding: 8rem 1.5rem 4rem !important; }
+  .mobile-pad-top { padding-top: 6rem !important; }
+}

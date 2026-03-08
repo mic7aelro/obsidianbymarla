@@ -43,6 +43,7 @@ export default function HomeHero() {
 
   return (
     <div
+      className="two-col-grid"
       style={{
         position: 'fixed',
         inset: 0,
@@ -57,7 +58,7 @@ export default function HomeHero() {
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          padding: '6rem',
+          padding: 'clamp(2rem, 6vw, 6rem)',
           overflowY: 'auto',
         }}
       >
@@ -65,7 +66,7 @@ export default function HomeHero() {
           ref={quoteRef}
           style={{
             fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(1.6rem, 3vw, 3.5rem)',
+            fontSize: 'clamp(1.4rem, 4vw, 3.5rem)',
             fontWeight: 300,
             lineHeight: 1.2,
             letterSpacing: '0.04em',
@@ -130,6 +131,7 @@ export default function HomeHero() {
       {/* Right — portrait, full height */}
       <div
         ref={portraitRef}
+        className="desktop-only"
         style={{ position: 'relative', width: '100%', height: '100%' }}
       >
         <Image

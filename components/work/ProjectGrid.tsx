@@ -4,6 +4,7 @@ import ProjectCard from './ProjectCard'
 export default function ProjectGrid() {
   return (
     <div
+      className="two-col-grid"
       style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(2, 1fr)',

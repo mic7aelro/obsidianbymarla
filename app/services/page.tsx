@@ -8,6 +8,7 @@ export const metadata = {
 export default function ServicesPage() {
   return (
     <div
+      className="two-col-grid"
       style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
@@ -16,18 +17,28 @@ export default function ServicesPage() {
     >
       {/* Left — sticky identity */}
       <div
+        className="sticky-panel mobile-pad"
         style={{
           position: 'sticky',
           top: 0,
           height: '100vh',
-          padding: '10rem 4rem 6rem 2.5rem',
-          borderRight: '1px solid rgba(255,255,255,0.06)',
+          padding: '10rem 7rem 6rem 2.5rem',
+          borderRight: 'none',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
           alignItems: 'flex-start',
         }}
       >
+        {/* Inset divider line — starts and ends away from page edges */}
+        <div style={{
+          position: 'absolute',
+          right: 0,
+          top: '4rem',
+          bottom: '1rem',
+          width: '1px',
+          background: 'rgba(255,255,255,0.06)',
+        }} />
         <h1
           style={{
             fontFamily: 'var(--font-display)',
@@ -63,6 +74,7 @@ export default function ServicesPage() {
 
       {/* Right — service list */}
       <div
+        className="mobile-pad"
         style={{
           padding: '10rem 2.5rem 6rem 4rem',
         }}
