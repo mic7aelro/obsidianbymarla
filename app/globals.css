@@ -50,4 +50,5 @@ a {
   .sticky-panel { position: static !important; height: auto !important; }
   .mobile-pad { padding: 8rem 1.5rem 4rem !important; }
   .mobile-pad-top { padding-top: 6rem !important; }
+  .mobile-pad-secondary { padding: 2rem 1.5rem 4rem !important; }
 }

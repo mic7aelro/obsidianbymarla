@@ -74,22 +74,30 @@ export default function ServicesPage() {
 
       {/* Right — service list */}
       <div
-        className="mobile-pad"
+        className="mobile-pad-secondary"
         style={{
           padding: '10rem 2.5rem 6rem 4rem',
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {services.map(category => (
-            <div key={category.title} style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '4rem' }}>
+          {services.map((category, i) => (
+            <div key={category.title} style={{ paddingTop: i === 0 ? '0' : '4rem' }}>
+              {i > 0 && (
+                <div style={{
+                  width: '100%',
+                  height: '1px',
+                  background: 'rgba(255,255,255,0.18)',
+                  marginBottom: '4rem',
+                }} />
+              )}
               <p
                 style={{
                   fontFamily: 'var(--font-sans)',
-                  fontSize: '9px',
+                  fontSize: '8px',
                   letterSpacing: '0.35em',
                   textTransform: 'uppercase',
                   opacity: 0.4,
-                  marginBottom: '2rem',
+                  marginBottom: '1.5rem',
                 }}
               >
                 {category.title}

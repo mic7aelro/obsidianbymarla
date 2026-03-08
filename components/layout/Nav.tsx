@@ -127,18 +127,18 @@ export default function Nav() {
             }}
           >
             <span style={{
-              display: 'block', width: '22px', height: '1px', background: '#fff',
+              display: 'block', width: '22px', height: '1px', background: 'rgba(255,255,255,0.55)',
               opacity: 1,
               transform: menuOpen ? 'translateY(6px) rotate(45deg)' : 'none',
               transition: 'transform 400ms cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
             <span style={{
-              display: 'block', width: '22px', height: '1px', background: '#fff',
+              display: 'block', width: '22px', height: '1px', background: 'rgba(255,255,255,0.55)',
               opacity: menuOpen ? 0 : 1,
               transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
             <span style={{
-              display: 'block', width: '22px', height: '1px', background: '#fff',
+              display: 'block', width: '22px', height: '1px', background: 'rgba(255,255,255,0.55)',
               opacity: 1,
               transform: menuOpen ? 'translateY(-6px) rotate(-45deg)' : 'none',
               transition: 'transform 400ms cubic-bezier(0.16, 1, 0.3, 1)',

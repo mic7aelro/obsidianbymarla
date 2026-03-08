@@ -80,7 +80,7 @@ export default function ContactPage() {
 
       {/* Right — form */}
       <div
-        className="mobile-pad"
+        className="mobile-pad-secondary"
         style={{
           padding: '10rem 2.5rem 6rem 4rem',
           display: 'flex',
