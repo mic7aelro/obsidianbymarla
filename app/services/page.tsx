@@ -79,9 +79,9 @@ export default function ServicesPage() {
           padding: '10rem 2.5rem 6rem 4rem',
         }}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '4rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           {services.map(category => (
-            <div key={category.title}>
+            <div key={category.title} style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '4rem' }}>
               <p
                 style={{
                   fontFamily: 'var(--font-sans)',

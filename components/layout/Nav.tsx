@@ -128,18 +128,18 @@ export default function Nav() {
           >
             <span style={{
               display: 'block', width: '22px', height: '1px', background: '#fff',
-              opacity: 0.8,
+              opacity: 1,
               transform: menuOpen ? 'translateY(6px) rotate(45deg)' : 'none',
               transition: 'transform 400ms cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
             <span style={{
               display: 'block', width: '22px', height: '1px', background: '#fff',
-              opacity: menuOpen ? 0 : 0.8,
+              opacity: menuOpen ? 0 : 1,
               transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
             <span style={{
               display: 'block', width: '22px', height: '1px', background: '#fff',
-              opacity: 0.8,
+              opacity: 1,
               transform: menuOpen ? 'translateY(-6px) rotate(-45deg)' : 'none',
               transition: 'transform 400ms cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
@@ -174,13 +174,13 @@ export default function Nav() {
             aria-label="Instagram"
             style={{
               color: '#fff',
-              opacity: 0.5,
+              opacity: 1,
               display: 'flex',
               alignItems: 'center',
               transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
             }}
             onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '0.5')}
+            onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
           >
             <Icon icon="mdi:instagram" width={22} height={22} />
           </a>
