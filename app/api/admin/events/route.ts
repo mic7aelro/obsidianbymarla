@@ -9,17 +9,29 @@ async function requireAuth() {
   return session.isLoggedIn
 }
 
-// GET /api/admin/events — list all events
-export async function GET() {
+// GET /api/admin/events — list events, optionally archived
+export async function GET(req: Request) {
   if (!(await requireAuth())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const { searchParams } = new URL(req.url)
+  const archived = searchParams.get('archived') === 'true'
+  const inquiryId = searchParams.get('inquiryId')
+
   const client = await clientPromise
   const db = client.db(process.env.MONGODB_DB ?? 'marla')
+
+  const query: Record<string, unknown> = {}
+  if (inquiryId) {
+    query.inquiryId = inquiryId
+  } else {
+    query.archived = archived ? true : { $ne: true }
+  }
+
   const events = await db
     .collection('events')
-    .find({})
+    .find(query)
     .sort({ createdAt: -1 })
     .toArray()
 
@@ -50,28 +62,24 @@ export async function POST(req: Request) {
     service,
     date: date ? new Date(date) : undefined,
     depositPaid: false,
+    status: 'awaiting_deposit',
+    archived: false,
     createdAt: now,
     updatedAt: now,
   }
 
   const result = await db.collection('events').insertOne(event)
 
-  // Move inquiry to awaiting_deposit
-  await db.collection('inquiries').updateOne(
-    { _id: new ObjectId(inquiryId) },
-    { $set: { status: 'awaiting_deposit', updatedAt: now } }
-  )
-
   return NextResponse.json({ ok: true, id: result.insertedId.toString() })
 }
 
-// PATCH /api/admin/events — update event (mark deposit paid, etc.)
+// PATCH /api/admin/events — update event (status, deposit, archive)
 export async function PATCH(req: Request) {
   if (!(await requireAuth())) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { id, depositPaid } = await req.json()
+  const { id, depositPaid, status, archived, notes } = await req.json()
   if (!id) {
     return NextResponse.json({ error: 'Missing id' }, { status: 400 })
   }
@@ -80,21 +88,19 @@ export async function PATCH(req: Request) {
   const client = await clientPromise
   const db = client.db(process.env.MONGODB_DB ?? 'marla')
 
+  const updates: Record<string, unknown> = { updatedAt: now }
+  if (depositPaid !== undefined) updates.depositPaid = depositPaid
+  if (status !== undefined) updates.status = status
+  if (archived !== undefined) updates.archived = archived
+  if (notes !== undefined) updates.notes = notes
+
+  // If marking deposit paid, auto-confirm
+  if (depositPaid === true) updates.status = 'confirmed'
+
   await db.collection('events').updateOne(
     { _id: new ObjectId(id) },
-    { $set: { depositPaid, updatedAt: now } }
+    { $set: updates }
   )
-
-  // If deposit paid, update the inquiry to confirmed
-  if (depositPaid) {
-    const event = await db.collection('events').findOne({ _id: new ObjectId(id) })
-    if (event?.inquiryId) {
-      await db.collection('inquiries').updateOne(
-        { _id: new ObjectId(event.inquiryId) },
-        { $set: { status: 'confirmed', updatedAt: now } }
-      )
-    }
-  }
 
   return NextResponse.json({ ok: true })
 }

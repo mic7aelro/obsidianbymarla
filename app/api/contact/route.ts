@@ -29,6 +29,7 @@ export async function POST(req: NextRequest) {
     service,
     message,
     status: 'pending',
+    archived: false,
     createdAt: now,
     updatedAt: now,
   }

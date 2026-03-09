@@ -1,6 +1,8 @@
 export type InquiryStatus =
   | 'pending'
   | 'reviewed'
+
+export type EventStatus =
   | 'awaiting_deposit'
   | 'confirmed'
   | 'completed'
@@ -13,6 +15,7 @@ export interface Inquiry {
   service: string
   message: string
   status: InquiryStatus
+  archived: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -26,6 +29,9 @@ export interface InquiryEvent {
   date?: Date
   depositPaid: boolean
   invoiceSentAt?: Date
+  status: EventStatus
+  archived: boolean
+  notes?: string
   createdAt: Date
   updatedAt: Date
 }
