@@ -11,7 +11,7 @@ export default async function ProjectGrid() {
         display: 'grid',
         gridTemplateColumns: 'repeat(2, 1fr)',
         gap: '4rem 2.5rem',
-        padding: '0 2.5rem 8rem',
+        padding: '0 2.5rem 1rem',
       }}
     >
       {projects.map((project, i) => (
