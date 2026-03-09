@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server'
-import { promises as fs } from 'fs'
-import path from 'path'
 import { getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
-
-const DATA_PATH = path.join(process.cwd(), 'data', 'hidden-images.json')
+import clientPromise from '@/lib/mongodb'
 
 async function requireAuth() {
   const session = await getIronSession<{ isLoggedIn?: boolean }>(
@@ -14,42 +11,27 @@ async function requireAuth() {
   return !!session.isLoggedIn
 }
 
-async function readHidden(): Promise<string[]> {
-  try {
-    const raw = await fs.readFile(DATA_PATH, 'utf-8')
-    return JSON.parse(raw)
-  } catch {
-    return []
-  }
+async function getCol() {
+  const client = await clientPromise
+  return client.db('marla').collection<{ src: string }>('hidden_images')
 }
 
-async function writeHidden(list: string[]) {
-  await fs.writeFile(DATA_PATH, JSON.stringify(list, null, 2))
-}
-
-// GET — return current hidden list
 export async function GET() {
-  if (!(await requireAuth())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-  const hidden = await readHidden()
-  return NextResponse.json(hidden)
+  if (!(await requireAuth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const col = await getCol()
+  const docs = await col.find({}).toArray()
+  return NextResponse.json(docs.map(d => d.src))
 }
 
-// POST — toggle a src: { src, hidden: true|false }
 export async function POST(req: Request) {
-  if (!(await requireAuth())) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  if (!(await requireAuth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const { src, hidden } = await req.json()
   if (!src) return NextResponse.json({ error: 'Missing src' }, { status: 400 })
-
-  let list = await readHidden()
+  const col = await getCol()
   if (hidden) {
-    if (!list.includes(src)) list.push(src)
+    await col.updateOne({ src }, { $set: { src } }, { upsert: true })
   } else {
-    list = list.filter(s => s !== src)
+    await col.deleteOne({ src })
   }
-  await writeHidden(list)
   return NextResponse.json({ ok: true })
 }

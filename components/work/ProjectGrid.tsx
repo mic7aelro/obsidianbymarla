@@ -1,7 +1,9 @@
-import { projects } from '@/data/projects'
+import { getProjects } from '@/data/projects'
 import ProjectCard from './ProjectCard'
 
-export default function ProjectGrid() {
+export default async function ProjectGrid() {
+  const projects = await getProjects()
+
   return (
     <div
       className="two-col-grid"

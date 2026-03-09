@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import CreateCollectionModal from './CreateCollectionModal'
 
 interface CurateImage {
   src: string
@@ -12,6 +13,7 @@ interface CurateImage {
 interface Gallery {
   slug: string
   title: string
+  disabled: boolean
   images: CurateImage[]
 }
 
@@ -24,6 +26,12 @@ const labelStyle: React.CSSProperties = {
 
 export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
   const [galleryIndex, setGalleryIndex] = useState(0)
+  const [collectionsOpen, setCollectionsOpen] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
+  const collectionsRef = useRef<HTMLDivElement>(null)
+  const [disabled, setDisabled] = useState<Set<string>>(() =>
+    new Set(galleries.filter(g => g.disabled).map(g => g.slug))
+  )
   const [hidden, setHidden] = useState<Set<string>>(() => {
     const set = new Set<string>()
     galleries.forEach(g => g.images.forEach(img => { if (img.hidden) set.add(img.src) }))
@@ -97,6 +105,19 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
     setSelected(new Set())
   }
 
+  async function toggleCollectionDisabled(slug: string) {
+    const next = new Set(disabled)
+    const isNowDisabled = !next.has(slug)
+    if (isNowDisabled) next.add(slug)
+    else next.delete(slug)
+    setDisabled(next)
+    await fetch('/api/admin/collections', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug, disabled: isNowDisabled }),
+    })
+  }
+
   async function toggleSingleImage(src: string) {
     const newHidden = new Set(hidden)
     if (newHidden.has(src)) newHidden.delete(src)
@@ -112,10 +133,21 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
       if (e.key === 'd') selectNone()
       if (e.key === 'h') hideSelected()
       if (e.key === 'u') unhideSelected()
+      if (e.key === 'Escape') setCollectionsOpen(false)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [allImages, selected, hidden])
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (collectionsRef.current && !collectionsRef.current.contains(e.target as Node)) {
+        setCollectionsOpen(false)
+      }
+    }
+    if (collectionsOpen) document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [collectionsOpen])
 
   const totalKept = galleries.reduce((acc, g) => acc + g.images.filter(i => !hidden.has(i.src)).length, 0)
   const totalAll = galleries.reduce((acc, g) => acc + g.images.length, 0)
@@ -137,17 +169,60 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
           </span>
         </div>
 
-        {/* Gallery tabs */}
-        <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-          {galleries.map((g, i) => {
-            const gKept = g.images.filter(img => !hidden.has(img.src)).length
-            return (
-              <button key={g.slug} onClick={() => { setGalleryIndex(i); setSelected(new Set()) }}
-                style={{ ...labelStyle, background: 'transparent', border: 'none', color: '#fff', opacity: i === galleryIndex ? 0.9 : 0.25, cursor: 'pointer', padding: '4px 0', borderBottom: i === galleryIndex ? '1px solid rgba(255,255,255,0.5)' : '1px solid transparent' }}>
-                {g.title} <span style={{ opacity: 0.5 }}>({gKept}/{g.images.length})</span>
-              </button>
-            )
-          })}
+        {/* Collections dropdown — absolutely centered */}
+        <div ref={collectionsRef} style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <button
+            onClick={() => setCreateOpen(true)}
+            style={{ ...labelStyle, background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.6)', padding: '7px 11px', cursor: 'pointer', fontSize: '14px', lineHeight: 1 }}
+            title="New Collection"
+          >
+            +
+          </button>
+          <button
+            onClick={() => setCollectionsOpen(o => !o)}
+            style={{ ...labelStyle, background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', padding: '7px 16px', cursor: 'pointer', opacity: 0.7, display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            Collections <span style={{ fontSize: '6px', opacity: 0.5 }}>{collectionsOpen ? '▲' : '▼'}</span>
+          </button>
+
+          {collectionsOpen && (
+            <div style={{
+              position: 'absolute', top: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)',
+              background: '#0d0d0d', border: '1px solid #222',
+              width: 'max-content', zIndex: 100,
+            }}>
+              {galleries.map((g, i) => {
+                const isActive = i === galleryIndex
+                const isDisabled = disabled.has(g.slug)
+                return (
+                  <div key={g.slug} style={{
+                    padding: '10px 16px', borderBottom: '1px solid #1a1a1a',
+                    background: isActive ? 'rgba(255,255,255,0.03)' : 'transparent',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
+                  }}>
+                    <button
+                      onClick={() => { setGalleryIndex(i); setSelected(new Set()); setCollectionsOpen(false) }}
+                      style={{ ...labelStyle, background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: isActive ? 1 : isDisabled ? 0.2 : 0.4, textAlign: 'left', padding: 0 }}
+                    >
+                      {g.title}
+                    </button>
+                    <button
+                      onClick={e => { e.stopPropagation(); toggleCollectionDisabled(g.slug) }}
+                      style={{
+                        ...labelStyle, fontSize: '8px',
+                        background: 'transparent',
+                        border: `1px solid ${isDisabled ? 'rgba(255,100,100,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                        color: isDisabled ? 'rgba(255,100,100,0.8)' : 'rgba(255,255,255,0.3)',
+                        padding: '3px 8px', cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {isDisabled ? 'Hidden from /work' : 'Visible'}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* Actions */}
@@ -166,6 +241,17 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
           {saving && <span style={{ ...labelStyle, opacity: 0.25, color: '#fff' }}>Saving…</span>}
         </div>
       </div>
+
+      {createOpen && (
+        <CreateCollectionModal
+          onClose={() => setCreateOpen(false)}
+          onCreated={(slug, title) => {
+            setCreateOpen(false)
+            // Reload the page so the new collection appears in the curate list
+            window.location.reload()
+          }}
+        />
+      )}
 
       {/* Image grid — columns layout for natural aspect ratios */}
       <div style={{ padding: '3px', columnCount: 4, columnGap: '3px' }}>

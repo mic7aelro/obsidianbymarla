@@ -1,6 +1,5 @@
 import { Project, ProjectImage } from '@/types/project'
-import { promises as fs } from 'fs'
-import path from 'path'
+import clientPromise from '@/lib/mongodb'
 
 function gallery(slug: string, dims: [number, number][]): ProjectImage[] {
   return dims.map(([width, height], i) => ({
@@ -12,11 +11,9 @@ function gallery(slug: string, dims: [number, number][]): ProjectImage[] {
 
 async function getHidden(): Promise<Set<string>> {
   try {
-    const raw = await fs.readFile(
-      path.join(process.cwd(), 'data', 'hidden-images.json'),
-      'utf-8'
-    )
-    return new Set(JSON.parse(raw))
+    const client = await clientPromise
+    const docs = await client.db('marla').collection<{ src: string }>('hidden_images').find({}).toArray()
+    return new Set(docs.map(d => d.src))
   } catch {
     return new Set()
   }
@@ -111,10 +108,31 @@ const rawProjects: Project[] = [
   },
 ]
 
+async function getDynamicCollections(): Promise<Project[]> {
+  try {
+    const client = await clientPromise
+    const docs = await client.db('marla').collection('collections').find({}).toArray()
+    return docs.map(({ _id, ...rest }) => rest as unknown as Project)
+  } catch {
+    return []
+  }
+}
+
+async function getDisabledCollections(): Promise<Set<string>> {
+  try {
+    const client = await clientPromise
+    const docs = await client.db('marla').collection<{ slug: string }>('disabled_collections').find({}).toArray()
+    return new Set(docs.map(d => d.slug))
+  } catch {
+    return new Set()
+  }
+}
+
 export async function getProjects(): Promise<Project[]> {
-  const hidden = await getHidden()
-  if (hidden.size === 0) return rawProjects
-  return rawProjects.map(p => ({
+  const [hidden, dynamic, disabled] = await Promise.all([getHidden(), getDynamicCollections(), getDisabledCollections()])
+  const all = [...rawProjects, ...dynamic].filter(p => !disabled.has(p.slug))
+  if (hidden.size === 0) return all
+  return all.map(p => ({
     ...p,
     images: p.images?.filter(img => !hidden.has(img.src)),
   }))

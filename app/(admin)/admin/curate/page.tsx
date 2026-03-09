@@ -1,29 +1,42 @@
 import CurateShell from '@/components/admin/CurateShell'
-import { projects } from '@/data/projects'
-import { promises as fs } from 'fs'
-import path from 'path'
+import { projects as rawProjects } from '@/data/projects'
+import clientPromise from '@/lib/mongodb'
 
 async function getHidden(): Promise<string[]> {
   try {
-    const raw = await fs.readFile(
-      path.join(process.cwd(), 'data', 'hidden-images.json'),
-      'utf-8'
-    )
-    return JSON.parse(raw)
-  } catch {
-    return []
-  }
+    const client = await clientPromise
+    const docs = await client.db('marla').collection<{ src: string }>('hidden_images').find({}).toArray()
+    return docs.map(d => d.src)
+  } catch { return [] }
+}
+
+async function getDynamicCollections() {
+  try {
+    const client = await clientPromise
+    const docs = await client.db('marla').collection('collections').find({}).toArray()
+    return docs.map(({ _id, ...rest }) => rest)
+  } catch { return [] }
+}
+
+async function getDisabled(): Promise<string[]> {
+  try {
+    const client = await clientPromise
+    const docs = await client.db('marla').collection<{ slug: string }>('disabled_collections').find({}).toArray()
+    return docs.map(d => d.slug)
+  } catch { return [] }
 }
 
 export default async function CuratePage() {
-  const hidden = await getHidden()
+  const [hidden, dynamic, disabled] = await Promise.all([getHidden(), getDynamicCollections(), getDisabled()])
+  const allProjects = [...rawProjects, ...dynamic]
 
-  const galleries = projects
+  const galleries = allProjects
     .filter(p => p.images && p.images.length > 0)
     .map(p => ({
       slug: p.slug,
       title: p.title,
-      images: p.images!.map(img => ({
+      disabled: disabled.includes(p.slug),
+      images: p.images!.map((img: { src: string; width: number; height: number }) => ({
         src: img.src,
         width: img.width,
         height: img.height,

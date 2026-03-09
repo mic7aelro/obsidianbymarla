@@ -1,5 +1,7 @@
 import ProjectGrid from '@/components/work/ProjectGrid'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata = {
   title: 'Work — Marla McLeod',
 }
