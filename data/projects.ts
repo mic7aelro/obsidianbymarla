@@ -130,7 +130,9 @@ async function getDisabledCollections(): Promise<Set<string>> {
 
 export async function getProjects(): Promise<Project[]> {
   const [hidden, dynamic, disabled] = await Promise.all([getHidden(), getDynamicCollections(), getDisabledCollections()])
-  const all = [...rawProjects, ...dynamic].filter(p => !disabled.has(p.slug))
+  const seen = new Set(rawProjects.map(p => p.slug))
+  const uniqueDynamic = dynamic.filter(p => !seen.has(p.slug))
+  const all = [...rawProjects, ...uniqueDynamic].filter(p => !disabled.has(p.slug))
   if (hidden.size === 0) return all
   return all.map(p => ({
     ...p,

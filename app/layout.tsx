@@ -21,6 +21,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <PageTransitionProvider>
             <NavWrapper />
             <main>{children}</main>
+            <footer style={{
+              padding: '2rem 2.5rem',
+              borderTop: 'none',
+              fontFamily: 'var(--font-sans)',
+              fontSize: '9px',
+              letterSpacing: '0.3em',
+              textTransform: 'uppercase',
+              color: 'rgba(255,255,255,0.3)',
+              textAlign: 'right',
+            }}>
+              © 2026 — All rights reserved
+            </footer>
           </PageTransitionProvider>
         </SmoothScrollProvider>
       </body>
