@@ -8,7 +8,7 @@ export default function ContactPage() {
     <div
       className="two-col-grid"
       style={{
-        minHeight: '100vh',
+        minHeight: 'calc(100vh - 5rem)',
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
       }}
@@ -31,7 +31,7 @@ export default function ContactPage() {
           position: 'absolute',
           right: 0,
           top: '4rem',
-          bottom: '1rem',
+          bottom: '-4rem',
           width: '1px',
           background: 'rgba(255,255,255,0.06)',
         }} />

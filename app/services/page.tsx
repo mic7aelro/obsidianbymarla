@@ -35,7 +35,7 @@ export default function ServicesPage() {
           position: 'absolute',
           right: 0,
           top: '4rem',
-          bottom: '1rem',
+          bottom: '-4rem',
           width: '1px',
           background: 'rgba(255,255,255,0.06)',
         }} />
