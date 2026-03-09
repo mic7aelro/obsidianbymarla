@@ -74,19 +74,18 @@ export default function Nav() {
           transition: 'transform 600ms cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
-        {/* Scrim */}
+        {/* Scrim — no zIndex, sits behind via DOM order inside position:fixed parent */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, transparent 100%)',
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, transparent 100%)',
             pointerEvents: 'none',
-            zIndex: -1,
           }}
         />
 
         {/* Left — nav links (desktop) / hamburger (mobile) */}
-        <div style={{ display: 'flex', alignItems: 'center', pointerEvents: 'all' }}>
+        <div style={{ display: 'flex', alignItems: 'center', pointerEvents: 'all', isolation: 'isolate' }}>
           {/* Desktop links */}
           <ul
             className="desktop-only"
