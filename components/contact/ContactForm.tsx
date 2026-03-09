@@ -55,6 +55,7 @@ export default function ContactForm() {
     name: '',
     email: '',
     phone: '',
+    location: '',
     service: '',
     message: '',
   })
@@ -146,6 +147,22 @@ export default function ContactForm() {
             onBlur={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.15)')}
           />
         </div>
+        <div>
+          <label htmlFor="location" style={labelStyle}>Where are you located?</label>
+          <input
+            id="location"
+            type="text"
+            value={form.location}
+            onChange={set('location')}
+            placeholder="City, State"
+            style={inputStyle}
+            onFocus={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.6)')}
+            onBlur={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.15)')}
+          />
+        </div>
+      </div>
+
+      <div className="two-col-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
         <div>
           <label htmlFor="service" style={labelStyle}>Service *</label>
           <select

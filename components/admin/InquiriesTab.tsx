@@ -639,6 +639,9 @@ export default function InquiriesTab({ onEventCreated }: { onEventCreated: () =>
                   {inquiry.phone && (
                     <p style={{ ...valueStyle, opacity: 0.4, fontSize: '11px' }}>{inquiry.phone}</p>
                   )}
+                  {inquiry.location && (
+                    <p style={{ ...valueStyle, opacity: 0.35, fontSize: '11px' }}>{inquiry.location}</p>
+                  )}
                 </div>
 
                 {/* Service + Message */}

@@ -12,6 +12,7 @@ export interface Inquiry {
   name: string
   email: string
   phone?: string
+  location?: string
   service: string
   message: string
   status: InquiryStatus
@@ -26,6 +27,7 @@ export interface InquiryEvent {
   clientName: string
   clientEmail: string
   service: string
+  location?: string
   date?: Date
   depositPaid: boolean
   invoiceSentAt?: Date

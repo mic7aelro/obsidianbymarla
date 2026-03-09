@@ -15,7 +15,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const { name, email, phone, service, message } = body
+  const { name, email, phone, location, service, message } = body
 
   if (!name || !email || !service || !message) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
     name,
     email,
     phone: phone || undefined,
+    location: location || undefined,
     service,
     message,
     status: 'pending',

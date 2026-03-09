@@ -36,6 +36,8 @@ export default function CreateEventModal({
   onCreated: () => void
 }) {
   const [date, setDate] = useState('')
+  const [location, setLocation] = useState(inquiry.location ?? '')
+  const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -53,6 +55,8 @@ export default function CreateEventModal({
         clientEmail: inquiry.email,
         service: inquiry.service,
         date: date || undefined,
+        location: location || undefined,
+        notes: notes || undefined,
       }),
     })
 
@@ -119,6 +123,31 @@ export default function CreateEventModal({
               value={date}
               onChange={(e) => setDate(e.target.value)}
               style={{ ...inputStyle, colorScheme: 'dark' }}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Location</label>
+            <input
+              type="text"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              style={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label style={labelStyle}>Notes (optional)</label>
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={4}
+              placeholder="Payment details, special requests, reminders…"
+              style={{
+                ...inputStyle,
+                resize: 'vertical',
+                lineHeight: '1.6',
+              }}
             />
           </div>
 

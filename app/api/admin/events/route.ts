@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { inquiryId, clientName, clientEmail, service, date } = await req.json()
+  const { inquiryId, clientName, clientEmail, service, date, location, notes } = await req.json()
   if (!inquiryId || !clientName || !clientEmail || !service) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
@@ -61,6 +61,8 @@ export async function POST(req: Request) {
     clientEmail,
     service,
     date: date ? new Date(date) : undefined,
+    location: location || undefined,
+    notes: notes || undefined,
     depositPaid: false,
     status: 'awaiting_deposit',
     archived: false,
