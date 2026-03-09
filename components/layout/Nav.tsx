@@ -87,7 +87,7 @@ export default function Nav() {
         />
 
         {/* Left — nav links (desktop) / hamburger (mobile) */}
-        <div style={{ display: 'flex', alignItems: 'center', pointerEvents: 'all', isolation: 'isolate' }}>
+        <div style={{ display: 'flex', alignItems: 'center', pointerEvents: 'all' }}>
           {/* Desktop links */}
           <ul
             className="desktop-only"
@@ -134,23 +134,18 @@ export default function Nav() {
             }}
           >
             <span style={{
-              display: 'block', width: '26px', height: '2px', background: '#fff',
-              opacity: 1,
-              position: 'relative', zIndex: 1,
-              transform: menuOpen ? 'translateY(6px) rotate(45deg)' : 'none',
+              display: 'block', width: '24px', height: '2px', backgroundColor: 'white',
+              transform: menuOpen ? 'translateY(4px) rotate(45deg)' : 'none',
               transition: 'transform 400ms cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
             <span style={{
-              display: 'block', width: '26px', height: '2px', background: '#fff',
-              position: 'relative', zIndex: 1,
+              display: 'block', width: '24px', height: '2px', backgroundColor: 'white',
               opacity: menuOpen ? 0 : 1,
               transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
             <span style={{
-              display: 'block', width: '26px', height: '2px', background: '#fff',
-              opacity: 1,
-              position: 'relative', zIndex: 1,
-              transform: menuOpen ? 'translateY(-6px) rotate(-45deg)' : 'none',
+              display: 'block', width: '24px', height: '2px', backgroundColor: 'white',
+              transform: menuOpen ? 'translateY(-4px) rotate(-45deg)' : 'none',
               transition: 'transform 400ms cubic-bezier(0.16, 1, 0.3, 1)',
             }} />
           </button>
