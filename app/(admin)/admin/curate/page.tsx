@@ -29,7 +29,7 @@ async function getDisabled(): Promise<string[]> {
 export default async function CuratePage() {
   const [hidden, dynamic, disabled] = await Promise.all([getHidden(), getDynamicCollections(), getDisabled()])
   const seen = new Set(rawProjects.map((p: { slug: string }) => p.slug))
-  const allProjects = [...rawProjects, ...dynamic.filter((p: { slug: string }) => !seen.has(p.slug))]
+  const allProjects = [...rawProjects, ...dynamic.filter((p: Record<string, unknown>) => !seen.has(p.slug as string))]
 
   const galleries = allProjects
     .filter(p => p.images && p.images.length > 0)
