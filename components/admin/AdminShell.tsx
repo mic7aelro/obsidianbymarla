@@ -56,6 +56,24 @@ export default function AdminShell() {
           Marla McLeod — Admin
         </span>
 
+        <a
+          href="/admin/curate"
+          style={{
+            background: 'transparent',
+            border: '1px solid rgba(255,255,255,0.15)',
+            color: 'rgba(255,255,255,0.5)',
+            fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
+            fontSize: '9px',
+            letterSpacing: '0.3em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            padding: '8px 16px',
+            marginRight: '16px',
+            textDecoration: 'none',
+          }}
+        >
+          Curate Gallery
+        </a>
         <button
           onClick={handleLogout}
           style={{

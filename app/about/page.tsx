@@ -47,7 +47,7 @@ export default function AboutPage() {
         </blockquote>
 
         <p className="prose">
-          Marla Chelsea McLeod is a New York-based fashion stylist, photographer, and creative
+          Marla Chelsea McLeod is a Miami-based fashion stylist, photographer, and creative
           director. Her work is rooted in the belief that authentic beauty needs no arrangement —
           only a witness willing to be present. She works across editorial, commercial, and personal
           projects, bringing the same unhurried attention to each.

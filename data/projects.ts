@@ -1,4 +1,6 @@
 import { Project, ProjectImage } from '@/types/project'
+import { promises as fs } from 'fs'
+import path from 'path'
 
 function gallery(slug: string, dims: [number, number][]): ProjectImage[] {
   return dims.map(([width, height], i) => ({
@@ -8,7 +10,19 @@ function gallery(slug: string, dims: [number, number][]): ProjectImage[] {
   }))
 }
 
-export const projects: Project[] = [
+async function getHidden(): Promise<Set<string>> {
+  try {
+    const raw = await fs.readFile(
+      path.join(process.cwd(), 'data', 'hidden-images.json'),
+      'utf-8'
+    )
+    return new Set(JSON.parse(raw))
+  } catch {
+    return new Set()
+  }
+}
+
+const rawProjects: Project[] = [
   {
     slug: 'nyfw-23',
     title: 'NYFW 23',
@@ -96,3 +110,15 @@ export const projects: Project[] = [
     ]),
   },
 ]
+
+export async function getProjects(): Promise<Project[]> {
+  const hidden = await getHidden()
+  if (hidden.size === 0) return rawProjects
+  return rawProjects.map(p => ({
+    ...p,
+    images: p.images?.filter(img => !hidden.has(img.src)),
+  }))
+}
+
+// Sync export for generateStaticParams (slug list only, no filtering needed)
+export const projects = rawProjects

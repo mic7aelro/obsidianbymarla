@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
-import { projects } from '@/data/projects'
+import { projects, getProjects } from '@/data/projects'
+import ProjectGallery from '@/components/work/ProjectGallery'
 
 export function generateStaticParams() {
   return projects.map(p => ({ slug: p.slug }))
@@ -16,10 +17,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProjectPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const project = projects.find(p => p.slug === slug)
+  const allProjects = await getProjects()
+  const project = allProjects.find(p => p.slug === slug)
   if (!project) notFound()
 
-  const others = projects.filter(p => p.slug !== slug).slice(0, 3)
+  const others = allProjects.filter(p => p.slug !== slug).slice(0, 3)
 
   return (
     <>
@@ -77,38 +79,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ slug: 
 
       {/* Gallery */}
       {project.images && project.images.length > 0 && (
-        <div
-          style={{
-            padding: '6rem 2.5rem',
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gridAutoRows: '40vw',
-            gap: '1.5rem',
-          }}
-        >
-          {project.images.map((img, i) => {
-            const isLandscape = img.width > img.height
-            return (
-              <div
-                key={i}
-                style={{
-                  gridColumn: isLandscape ? 'span 2' : 'span 1',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  background: '#111',
-                }}
-              >
-                <Image
-                  src={img.src}
-                  alt={`${project.title} — image ${i + 1}`}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 50vw"
-                  style={{ objectFit: 'cover' }}
-                />
-              </div>
-            )
-          })}
-        </div>
+        <ProjectGallery images={project.images} title={project.title} />
       )}
 
       {/* Next projects */}

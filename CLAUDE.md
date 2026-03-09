@@ -115,7 +115,7 @@ Custom packages available on request.
 ### Contact page
 
 - Instagram: @marlizzlle (plain uppercase text link)
-- Location: New York (small uppercase)
+- Location: Greater Miami Area (small uppercase)
 - Booking form (see Booking section below)
 
 ---

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --webpack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start"
   },
@@ -16,7 +16,7 @@
     "gsap": "^3.14.2",
     "iron-session": "^8.0.4",
     "mongodb": "^7.1.0",
-    "next": "^16.1.6",
+    "next": "15.3.9",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "resend": "^6.9.3",

@@ -9,7 +9,7 @@ import PageTransitionProvider from '@/providers/PageTransitionProvider'
 export const metadata: Metadata = {
   title: 'Marla McLeod — Fashion Stylist & Photographer',
   description:
-    'Marla McLeod is a New York-based fashion stylist, photographer, and creative director.',
+    'Marla McLeod is a Miami-based fashion stylist, photographer, and creative director.',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
