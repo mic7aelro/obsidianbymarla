@@ -19,6 +19,9 @@ export async function middleware(req: NextRequest) {
 
   // Rewrite admin.obsidianbymarla.com/* → /admin/*
   if (isAdminSubdomain) {
+    // Pass API routes through unchanged
+    if (pathname.startsWith('/api/')) return NextResponse.next()
+
     // Strip leading /admin if already present to avoid double-prefixing
     const stripped = pathname.replace(/^\/admin/, '') || '/'
     const adminPath = stripped === '/' ? '/admin/home' : `/admin${stripped}`
