@@ -53,9 +53,26 @@ export default function AdminShell() {
             color: '#fff',
           }}
         >
-          Marla McLeod — Admin
+          Obsidian By Marla — Admin
         </span>
 
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <a
+          href="https://www.obsidianbymarla.com"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'rgba(255,255,255,0.35)',
+            fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
+            fontSize: '9px',
+            letterSpacing: '0.3em',
+            textTransform: 'uppercase',
+            cursor: 'pointer',
+            textDecoration: 'none',
+          }}
+        >
+          Home
+        </a>
         <a
           href="/admin/curate"
           style={{
@@ -68,7 +85,6 @@ export default function AdminShell() {
             textTransform: 'uppercase',
             cursor: 'pointer',
             padding: '8px 16px',
-            marginRight: '16px',
             textDecoration: 'none',
           }}
         >
@@ -89,6 +105,7 @@ export default function AdminShell() {
         >
           Sign out
         </button>
+        </div>
       </header>
 
       {/* Tabs */}

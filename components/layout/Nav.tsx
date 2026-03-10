@@ -167,7 +167,7 @@ export default function Nav() {
             whiteSpace: 'nowrap',
           }}
         >
-          Marla Chelsea McLeod
+          Obsidian By Marla Chelsea McLeod
         </Link>
 
         {/* Right — Instagram icon (desktop only) */}
