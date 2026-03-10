@@ -23,7 +23,7 @@ export default function AdminLoginPage() {
     })
 
     if (res.ok) {
-      router.push('/admin')
+      router.push('/home')
     } else {
       setError('Incorrect password. Try again.')
       setPassword('')

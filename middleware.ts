@@ -19,7 +19,9 @@ export async function middleware(req: NextRequest) {
 
   // Rewrite admin.obsidianbymarla.com/* → /admin/*
   if (isAdminSubdomain) {
-    const adminPath = pathname === '/' ? '/admin' : `/admin${pathname}`
+    // Strip leading /admin if already present to avoid double-prefixing
+    const stripped = pathname.replace(/^\/admin/, '') || '/'
+    const adminPath = stripped === '/' ? '/admin/home' : `/admin${stripped}`
     const url = req.nextUrl.clone()
     url.pathname = adminPath
 
@@ -29,7 +31,7 @@ export async function middleware(req: NextRequest) {
       const session = await getIronSession<SessionData>(req, res, sessionOptions)
       if (!session.isLoggedIn) {
         const loginUrl = req.nextUrl.clone()
-        loginUrl.pathname = '/admin/login'
+        loginUrl.pathname = '/login'
         return NextResponse.redirect(loginUrl)
       }
       return res

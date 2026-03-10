@@ -52,7 +52,7 @@ export function invoiceHtml({ clientName, service, date }: InvoiceProps): string
     </div>
 
     <p style="margin-top: 32px; font-size: 13px; line-height: 1.8; opacity: 0.7;">
-      Questions? Reply to this email or reach out on Instagram — <a href="https://instagram.com/marlizzlle" style="color: #fff;">@marlizzlle</a>
+      Questions? Reply to this email or reach out on Instagram — <a href="https://instagram.com/marlizzlle" style="color: #000;">@marlizzlle</a>
     </p>
 
     <div class="footer">Marla McLeod — obsidianstudiosco@gmail.com</div>

@@ -28,7 +28,7 @@ export function inquiryConfirmationHtml({
     <p>Your inquiry has been received. Marla will be in touch within 1–2 business days to discuss your project.</p>
     <div class="label">Service requested</div>
     <div class="value">${service}</div>
-    <p style="margin-top: 32px;">In the meantime, feel free to explore more of Marla's work on Instagram — <a href="https://instagram.com/marlizzlle" style="color:#fff;">@marlizzlle</a></p>
+    <p style="margin-top: 32px;">In the meantime, feel free to explore more of Marla's work on Instagram — <a href="https://instagram.com/marlizzlle" style="color:#000;">@marlizzlle</a></p>
     <div class="footer">Marla McLeod — Fashion Stylist &amp; Photographer</div>
   </div>
 </body>
