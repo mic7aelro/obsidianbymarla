@@ -3,8 +3,11 @@
 import { usePathname } from 'next/navigation'
 import Nav from './Nav'
 
+const PUBLIC_ROUTES = ['/work', '/services', '/contact', '/about']
+
 export default function NavWrapper() {
   const pathname = usePathname()
-  if (pathname === '/' || pathname.startsWith('/admin')) return null
+  const isPublic = PUBLIC_ROUTES.some(r => pathname === r || pathname.startsWith(r + '/'))
+  if (!isPublic) return null
   return <Nav />
 }
