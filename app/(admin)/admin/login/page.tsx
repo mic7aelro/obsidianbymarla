@@ -23,7 +23,7 @@ export default function AdminLoginPage() {
     })
 
     if (res.ok) {
-      router.push('/home')
+      router.push('/admin/home')
     } else {
       setError('Incorrect password. Try again.')
       setPassword('')
@@ -43,18 +43,23 @@ export default function AdminLoginPage() {
       }}
     >
       <a
-        href="/"
+        href="https://www.obsidianbymarla.com/"
         style={{
           position: 'fixed',
           top: '28px',
           left: '32px',
           fontFamily: 'var(--font-sans)',
-          fontSize: '9px',
-          letterSpacing: '0.35em',
+          fontSize: '12px',
+          fontWeight: 400,
+          letterSpacing: '0.3em',
           textTransform: 'uppercase',
-          color: 'rgba(255,255,255,0.35)',
+          color: '#fff',
           textDecoration: 'none',
+          opacity: 1,
+          transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
         }}
+        onMouseEnter={e => (e.currentTarget.style.opacity = '0.6')}
+        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
       >
         Home
       </a>

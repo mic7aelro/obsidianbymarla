@@ -38,12 +38,13 @@ export default function AdminShell() {
         style={{
           borderBottom: '1px solid #1e1e1e',
           padding: '24px 40px',
-          display: 'flex',
+          display: 'grid',
+          gridTemplateColumns: '1fr auto 1fr',
           alignItems: 'center',
-          justifyContent: 'space-between',
         }}
       >
-        <span
+        <a
+          href="https://www.obsidianbymarla.com/"
           style={{
             fontFamily: 'var(--font-display, Georgia, serif)',
             fontSize: '16px',
@@ -51,28 +52,16 @@ export default function AdminShell() {
             letterSpacing: '0.12em',
             textTransform: 'uppercase',
             color: '#fff',
+            textDecoration: 'none',
+            opacity: 1,
+            transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
           }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '0.6')}
+          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
         >
           Obsidian By Marla — Admin
-        </span>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-        <a
-          href="https://www.obsidianbymarla.com"
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'rgba(255,255,255,0.35)',
-            fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
-            fontSize: '9px',
-            letterSpacing: '0.3em',
-            textTransform: 'uppercase',
-            cursor: 'pointer',
-            textDecoration: 'none',
-          }}
-        >
-          Home
         </a>
+
         <a
           href="/admin/curate"
           style={{
@@ -90,21 +79,23 @@ export default function AdminShell() {
         >
           Curate Gallery
         </a>
-        <button
-          onClick={handleLogout}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'rgba(255,255,255,0.35)',
-            fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
-            fontSize: '9px',
-            letterSpacing: '0.3em',
-            textTransform: 'uppercase',
-            cursor: 'pointer',
-          }}
-        >
-          Sign out
-        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', justifyContent: 'flex-end' }}>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: 'rgba(255,255,255,0.35)',
+              fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
+              fontSize: '9px',
+              letterSpacing: '0.3em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+            }}
+          >
+            Sign out
+          </button>
         </div>
       </header>
 
