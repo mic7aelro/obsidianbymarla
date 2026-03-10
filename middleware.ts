@@ -14,12 +14,34 @@ const sessionOptions = {
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
+  const host = req.headers.get('host') ?? ''
+  const isAdminSubdomain = host.startsWith('admin.')
 
-  // Protect /admin/* except /admin/login
+  // Rewrite admin.obsidianbymarla.com/* → /admin/*
+  if (isAdminSubdomain) {
+    const adminPath = pathname === '/' ? '/admin' : `/admin${pathname}`
+    const url = req.nextUrl.clone()
+    url.pathname = adminPath
+
+    // Auth check (skip login page)
+    if (adminPath !== '/admin/login') {
+      const res = NextResponse.rewrite(url)
+      const session = await getIronSession<SessionData>(req, res, sessionOptions)
+      if (!session.isLoggedIn) {
+        const loginUrl = req.nextUrl.clone()
+        loginUrl.pathname = '/admin/login'
+        return NextResponse.redirect(loginUrl)
+      }
+      return res
+    }
+
+    return NextResponse.rewrite(url)
+  }
+
+  // Protect /admin/* on main domain
   if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
     const res = NextResponse.next()
     const session = await getIronSession<SessionData>(req, res, sessionOptions)
-
     if (!session.isLoggedIn) {
       return NextResponse.redirect(new URL('/admin/login', req.url))
     }
@@ -29,5 +51,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*'],
+  matcher: ['/((?!_next|favicon.ico|images|fonts).*)'],
 }
