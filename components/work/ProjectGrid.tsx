@@ -5,18 +5,14 @@ export default async function ProjectGrid() {
   const projects = await getProjects()
 
   return (
-    <div
-      className="two-col-grid"
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-        gap: '4rem 2.5rem',
-        padding: '0 2.5rem 1rem',
-      }}
-    >
-      {projects.map((project, i) => (
-        <ProjectCard key={project.slug} project={project} index={i} />
-      ))}
+    <div className="project-grid">
+      {projects.length > 0 ? (
+        projects.map((project, i) => (
+          <ProjectCard key={project.slug} project={project} index={i} />
+        ))
+      ) : (
+        <p className="empty-state">New work is being prepared. Please check back soon.</p>
+      )}
     </div>
   )
 }

@@ -2,177 +2,48 @@ import Link from 'next/link'
 import { services } from '@/data/services'
 
 export const metadata = {
-  title: 'Services — Marla McLeod',
+  title: 'Services',
+  description: 'Photography, styling, wedding, and personal shopping services by Marla McLeod.',
 }
 
 export default function ServicesPage() {
   return (
-    <div
-      className="two-col-grid"
-      style={{
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        alignItems: 'start',
-      }}
-    >
-      {/* Left — sticky identity */}
-      <div
-        className="sticky-panel mobile-pad"
-        style={{
-          position: 'sticky',
-          top: 0,
-          height: '100vh',
-          padding: '10rem 7rem 6rem 2.5rem',
-          borderRight: 'none',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-        }}
-      >
-        {/* Inset divider line — starts and ends away from page edges */}
-        <div style={{
-          position: 'absolute',
-          right: 0,
-          top: '4rem',
-          bottom: '-4rem',
-          width: '1px',
-          background: 'rgba(255,255,255,0.06)',
-        }} />
-        <h1
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(3rem, 8vw, 8rem)',
-            fontWeight: 300,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            lineHeight: 1,
-            marginBottom: '2rem',
-          }}
-        >
-          Services
-        </h1>
-
-        <p className="prose" style={{ marginBottom: '3rem' }}>
-          Every project is different. Whether you need a photographer who will disappear into the
-          room or a stylist who builds your visual identity from the ground up, custom packages are
-          available. Reach out with what you have in mind.
+    <div className="split-page service-split">
+      <header className="split-page__intro">
+        <h1 className="display-title">Services</h1>
+        <p className="prose">
+          Every project is different. Marla brings the same unhurried attention to intimate
+          portraits, full wedding days, commercial sets, and personal wardrobes.
         </p>
+        <p className="split-page__note">Custom packages available on request</p>
+      </header>
 
-        <p
-          style={{
-            fontFamily: 'var(--font-sans)',
-            fontSize: '9px',
-            letterSpacing: '0.35em',
-            textTransform: 'uppercase',
-            opacity: 0.35,
-          }}
-        >
-          Custom packages available on request
+      <div className="split-page__content services-panel">
+        <p className="services-scroll-cue" aria-hidden="true">
+          More services <span>↓</span>
         </p>
-      </div>
-
-      {/* Right — service list */}
-      <div
-        className="mobile-pad-secondary"
-        style={{
-          padding: '10rem 2.5rem 6rem 4rem',
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {services.map((category, i) => (
-            <div key={category.title} style={{ paddingTop: i === 0 ? '0' : '4rem' }}>
-              {i > 0 && (
-                <div style={{
-                  width: '100%',
-                  height: '1px',
-                  background: 'rgba(255,255,255,0.6)',
-                  marginBottom: '4rem',
-                }} />
-              )}
-              <p
-                style={{
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: '8px',
-                  letterSpacing: '0.35em',
-                  textTransform: 'uppercase',
-                  opacity: 0.4,
-                  marginBottom: '1.5rem',
-                }}
-              >
-                {category.title}
-              </p>
-
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                {category.packages.map(pkg => (
-                  <div
-                    key={pkg.name}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr auto',
-                      gap: '1rem',
-                      alignItems: 'start',
-                    }}
-                  >
-                    <div>
-                      <p
-                        style={{
-                          fontFamily: 'var(--font-display)',
-                          fontSize: '1.1rem',
-                          fontWeight: 300,
-                          letterSpacing: '0.06em',
-                          textTransform: 'uppercase',
-                          marginBottom: '0.4rem',
-                        }}
-                      >
-                        {pkg.name}
-                      </p>
-                      <p
-                        style={{
-                          fontFamily: 'var(--font-sans)',
-                          fontSize: '12px',
-                          opacity: 0.5,
-                          lineHeight: 1.6,
-                        }}
-                      >
-                        {pkg.details}
-                      </p>
-                    </div>
-                    <p
-                      style={{
-                        fontFamily: 'var(--font-sans)',
-                        fontSize: '11px',
-                        letterSpacing: '0.1em',
-                        opacity: 0.8,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {pkg.price}
-                    </p>
+        {services.map(category => (
+          <section className="service-category" key={category.title}>
+            <h2 className="service-category__title">{category.title}</h2>
+            <div className="service-packages">
+              {category.packages.map(pkg => (
+                <div className="service-package" key={pkg.name}>
+                  <div>
+                    <h3 className="service-package__name">{pkg.name}</h3>
+                    <p className="service-package__details">{pkg.details}</p>
                   </div>
-                ))}
-              </div>
-
-              <div style={{ marginTop: '2rem' }}>
-                <Link
-                  href={`/contact?service=${encodeURIComponent(category.title)}`}
-                  style={{
-                    fontFamily: 'var(--font-sans)',
-                    fontSize: '9px',
-                    letterSpacing: '0.3em',
-                    textTransform: 'uppercase',
-                    opacity: 0.4,
-                    transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-                  }}
-                >
-                  Book this →
-                </Link>
-              </div>
+                  <p className="service-package__price">{pkg.price}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+            <div className="service-category__cta">
+              <Link className="text-link" href={`/contact?service=${encodeURIComponent(category.title)}`}>
+                Send an inquiry
+              </Link>
+            </div>
+          </section>
+        ))}
       </div>
-
     </div>
   )
 }

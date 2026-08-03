@@ -45,7 +45,8 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL!,
       to: process.env.MARLA_EMAIL!,
-      subject: `New inquiry — ${name} (${service})`,
+      replyTo: email,
+      subject: `New inquiry | ${name} (${service})`,
       html: inquiryNotificationHtml({ name, email, phone, service, message }),
       text: inquiryNotificationText({ name, email, phone, service, message }),
     })
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
     await resend.emails.send({
       from: process.env.RESEND_FROM_EMAIL!,
       to: email,
+      replyTo: 'marla@obsidianbymarla.com',
       subject: 'Your inquiry has been received',
       html: inquiryConfirmationHtml({ name, service }),
       text: inquiryConfirmationText({ name, service }),

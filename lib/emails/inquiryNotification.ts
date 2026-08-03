@@ -56,7 +56,7 @@ export function inquiryNotificationText({
   message,
 }: InquiryNotificationProps): string {
   return [
-    'NEW INQUIRY — MARLA McLEOD',
+    'NEW INQUIRY | MARLA McLEOD',
     '',
     `Name: ${name}`,
     `Email: ${email}`,

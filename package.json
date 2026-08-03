@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node --no-experimental-webstorage ./node_modules/next/dist/bin/next dev",
     "build": "next build",
     "start": "next start"
   },
@@ -12,6 +12,7 @@
     "@react-pdf/renderer": "^4.3.2",
     "@studio-freight/lenis": "^1.0.42",
     "@types/react-pdf": "^6.2.0",
+    "@vercel/blob": "^2.6.1",
     "@vitejs/plugin-react": "^5.1.4",
     "gsap": "^3.14.2",
     "iron-session": "^8.0.4",

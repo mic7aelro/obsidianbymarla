@@ -7,17 +7,17 @@ export const services: ServiceCategory[] = [
       {
         name: 'Engagement Session',
         price: '$350',
-        details: '1 hour — 15 edited photos',
+        details: '1 hour / 15 edited photos',
       },
       {
         name: 'Elopement Package',
         price: '$900',
-        details: '2 hours — 40 edited photos',
+        details: '2 hours / 40 edited photos',
       },
       {
         name: 'Wedding Package',
         price: 'From $2,500',
-        details: 'Full-day coverage — 100+ edited photos — online gallery',
+        details: 'Full-day coverage / 100+ edited photos / online gallery',
       },
     ],
   },
@@ -42,12 +42,12 @@ export const services: ServiceCategory[] = [
       {
         name: 'Personal Portraits',
         price: '$250',
-        details: '1 hour — 10 retouched photos',
+        details: '1 hour / 10 retouched photos',
       },
       {
         name: 'Headshots',
         price: '$150',
-        details: '30 minutes — 5 edited photos',
+        details: '30 minutes / 5 edited photos',
       },
       {
         name: 'Commercial Photography',

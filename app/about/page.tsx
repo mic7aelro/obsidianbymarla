@@ -1,58 +1,40 @@
+import Image from 'next/image'
+import Link from 'next/link'
+import { mediaUrl } from '@/lib/media'
+
 export const metadata = {
-  title: 'About — Marla McLeod',
+  title: 'About',
+  description: 'About Miami-based fashion stylist, photographer, and creative director Marla McLeod.',
 }
 
 export default function AboutPage() {
   return (
-    <div style={{ padding: '14rem 2.5rem 10rem' }}>
-      <div style={{ maxWidth: '900px' }}>
-        {/* Portrait placeholder */}
-        <div
-          style={{
-            width: '100%',
-            maxWidth: '480px',
-            aspectRatio: '3 / 4',
-            background: '#111',
-            marginBottom: '5rem',
-          }}
+    <article className="about-page">
+      <div className="about-page__image">
+        <Image
+          className="about-page__portrait"
+          src={mediaUrl('/images/marla-portrait.jpg')}
+          alt="Portrait of Marla Chelsea McLeod"
+          fill
+          priority
+          sizes="(max-width: 900px) 100vw, 55vw"
         />
-
-        <blockquote
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(1.8rem, 4vw, 3.5rem)',
-            fontWeight: 300,
-            lineHeight: 1.25,
-            letterSpacing: '0.04em',
-            fontStyle: 'italic',
-            marginBottom: '3rem',
-            maxWidth: '640px',
-          }}
-        >
-          &ldquo;I praise you, for I am fearfully and wonderfully made.&rdquo;
-          <cite
-            style={{
-              display: 'block',
-              fontFamily: 'var(--font-sans)',
-              fontSize: '9px',
-              fontStyle: 'normal',
-              letterSpacing: '0.3em',
-              textTransform: 'uppercase',
-              opacity: 0.4,
-              marginTop: '1rem',
-            }}
-          >
-            Psalm 139:14
-          </cite>
+      </div>
+      <div className="about-page__copy">
+        <h1 className="about-page__title">About Marla</h1>
+        <blockquote className="about-page__quote">
+          “I praise you, for I am fearfully and wonderfully made.”
         </blockquote>
-
         <p className="prose">
           Marla Chelsea McLeod is a Miami-based fashion stylist, photographer, and creative
-          director. Her work is rooted in the belief that authentic beauty needs no arrangement —
+          director. Her work is rooted in the belief that authentic beauty needs no arrangement,
           only a witness willing to be present. She works across editorial, commercial, and personal
           projects, bringing the same unhurried attention to each.
         </p>
+        <Link className="text-link" href="/contact" style={{ marginTop: '2rem' }}>
+          Send an inquiry
+        </Link>
       </div>
-    </div>
+    </article>
   )
 }

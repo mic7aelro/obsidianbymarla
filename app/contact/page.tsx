@@ -5,90 +5,18 @@ import ContactForm from '@/components/contact/ContactForm'
 
 export default function ContactPage() {
   return (
-    <div
-      className="two-col-grid"
-      style={{
-        minHeight: 'calc(100vh - 5rem)',
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-      }}
-    >
-      {/* Left — identity */}
-      <div
-        className="mobile-pad"
-        style={{
-          padding: '10rem 7rem 6rem 2.5rem',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          gap: '2rem',
-          borderRight: 'none',
-          position: 'relative',
-        }}
-      >
-        {/* Inset divider line — starts and ends away from page edges */}
-        <div style={{
-          position: 'absolute',
-          right: 0,
-          top: '4rem',
-          bottom: '-4rem',
-          width: '1px',
-          background: 'rgba(255,255,255,0.06)',
-        }} />
-        <div>
-          <h1
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 'clamp(3.5rem, 7vw, 9rem)',
-              fontWeight: 300,
-              letterSpacing: '0.06em',
-              textTransform: 'uppercase',
-              lineHeight: 0.9,
-              marginBottom: '3rem',
-            }}
-          >
-            Contact
-          </h1>
+    <div className="split-page contact-page">
+      <header className="split-page__intro">
+        <h1 className="display-title">Contact</h1>
+        <p className="prose">
+          Available for editorial, wedding, commercial, and personal styling work. Tell Marla what
+          you are making and what you need.
+        </p>
+        <p className="split-page__note">Serving the Greater Miami area</p>
+      </header>
 
-          <p
-            style={{
-              fontFamily: 'var(--font-sans)',
-              fontSize: '13px',
-              lineHeight: 1.8,
-              opacity: 0.55,
-              maxWidth: '360px',
-              marginBottom: '2.5rem',
-            }}
-          >
-            Available for editorial, wedding, commercial, and personal styling work.
-            Custom packages on request.
-          </p>
-
-          <p
-            style={{
-              fontFamily: 'var(--font-sans)',
-              fontSize: '9px',
-              letterSpacing: '0.35em',
-              textTransform: 'uppercase',
-              opacity: 0.35,
-            }}
-          >
-            Services available in the Greater Miami area
-          </p>
-        </div>
-      </div>
-
-      {/* Right — form */}
-      <div
-        className="mobile-pad-secondary"
-        style={{
-          padding: '10rem 2.5rem 6rem 4rem',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-        }}
-      >
-        <Suspense fallback={null}>
+      <div className="split-page__content" style={{ alignSelf: 'center' }}>
+        <Suspense fallback={<p className="form-message">Preparing the inquiry form...</p>}>
           <ContactForm />
         </Suspense>
       </div>

@@ -9,6 +9,10 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cdn.myportfolio.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'fcovciswghasp9jj.public.blob.vercel-storage.com',
+      },
     ],
   },
 }

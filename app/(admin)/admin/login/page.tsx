@@ -1,229 +1,273 @@
 'use client'
 
-import { useState, FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, type CSSProperties, type FormEvent } from 'react'
+
+type Step = 'email' | 'code'
+
+const labelStyle: CSSProperties = {
+  color: 'rgba(242,240,236,0.48)',
+  fontFamily: 'var(--font-sans)',
+  fontSize: '9px',
+  letterSpacing: '0.35em',
+  textTransform: 'uppercase',
+}
+
+const inputStyle: CSSProperties = {
+  background: 'transparent',
+  border: 0,
+  borderBottom: '1px solid rgba(242,240,236,0.24)',
+  borderRadius: 0,
+  color: '#f2f0ec',
+  fontFamily: 'var(--font-sans)',
+  fontSize: '14px',
+  outline: 0,
+  padding: '12px 0',
+  width: '100%',
+}
+
+const buttonStyle: CSSProperties = {
+  background: 'transparent',
+  border: '1px solid rgba(242,240,236,0.28)',
+  borderRadius: 0,
+  color: '#f2f0ec',
+  fontFamily: 'var(--font-sans)',
+  fontSize: '9px',
+  letterSpacing: '0.35em',
+  padding: '15px 24px',
+  textTransform: 'uppercase',
+  transition: 'border-color 400ms cubic-bezier(0.16, 1, 0.3, 1), opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+  width: '100%',
+}
 
 export default function AdminLoginPage() {
-  const router = useRouter()
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+  const [step, setStep] = useState<Step>('email')
+  const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [pending, setPending] = useState(false)
 
-  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+  async function requestCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
     setError('')
-    setLoading(true)
+    setPending(true)
 
-    const res = await fetch('/api/admin/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password }),
-    })
+    try {
+      const response = await fetch('/api/admin/login/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      })
+      const data = await response.json().catch(() => ({}))
 
-    if (res.ok) {
-      router.push('/admin/home')
-    } else {
-      setError('Incorrect password. Try again.')
-      setPassword('')
+      if (!response.ok) {
+        setError(data.error ?? 'The code could not be sent.')
+        return
+      }
+
+      setCode('')
+      setStep('code')
+    } catch {
+      setError('The code could not be sent.')
+    } finally {
+      setPending(false)
     }
+  }
 
-    setLoading(false)
+  async function verifyCode(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setError('')
+    setPending(true)
+
+    try {
+      const response = await fetch('/api/admin/login/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, code }),
+      })
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        setError(data.error ?? 'The code could not be verified.')
+        return
+      }
+
+      const adminHost = window.location.hostname.startsWith('admin.')
+      window.location.assign(adminHost ? '/home' : '/admin/home')
+    } catch {
+      setError('The code could not be verified.')
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
     <div
       style={{
-        minHeight: '100vh',
-        background: '#000',
-        display: 'flex',
         alignItems: 'center',
+        background: '#050505',
+        display: 'flex',
         justifyContent: 'center',
+        minHeight: '100dvh',
+        padding: '8rem 1.5rem 3rem',
       }}
     >
-      <a
-        href="https://www.obsidianbymarla.com/"
+      <header
         style={{
+          alignItems: 'center',
+          display: 'grid',
+          gridTemplateColumns: '1fr auto 1fr',
+          left: 0,
+          padding: '2rem var(--page-gutter)',
           position: 'fixed',
-          top: '28px',
-          left: '32px',
-          fontFamily: 'var(--font-sans)',
-          fontSize: '12px',
-          fontWeight: 400,
-          letterSpacing: '0.3em',
-          textTransform: 'uppercase',
-          color: '#fff',
-          textDecoration: 'none',
-          opacity: 1,
-          transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
+          right: 0,
+          top: 0,
+          zIndex: 2,
         }}
-        onMouseEnter={e => (e.currentTarget.style.opacity = '0.6')}
-        onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
       >
-        Home
-      </a>
-      <div style={{ width: '100%', maxWidth: '380px', padding: '0 24px' }}>
+        <a
+          href="https://www.obsidianbymarla.com/"
+          style={{
+            color: '#f2f0ec',
+            fontFamily: 'var(--font-sans)',
+            fontSize: '12px',
+            justifySelf: 'start',
+            letterSpacing: '0.3em',
+            opacity: 0.72,
+            textTransform: 'uppercase',
+          }}
+        >
+          Home
+        </a>
+
+        <a
+          href="https://www.obsidianbymarla.com/"
+          style={{
+            color: '#f2f0ec',
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(11px, 1.1vw, 15px)',
+            fontWeight: 300,
+            gridColumn: 2,
+            justifySelf: 'center',
+            letterSpacing: '0.25em',
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          Obsidian by Marla Chelsea McLeod
+        </a>
+
+        <span aria-hidden="true" />
+      </header>
+
+      <div style={{ maxWidth: '420px', width: '100%' }}>
         <p
           style={{
+            color: '#f2f0ec',
             fontFamily: 'var(--font-display)',
-            fontSize: '28px',
+            fontSize: '30px',
             fontWeight: 300,
             letterSpacing: '0.12em',
+            marginBottom: '3rem',
             textTransform: 'uppercase',
-            color: '#fff',
-            marginBottom: '48px',
           }}
         >
           Marla McLeod
         </p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Username */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label
-              htmlFor="username"
-              style={{
-                fontFamily: 'var(--font-sans)',
-                fontSize: '9px',
-                letterSpacing: '0.35em',
-                textTransform: 'uppercase',
-                color: '#fff',
-                opacity: 0.45,
-              }}
-            >
-              Username
-            </label>
-            <input
-              id="username"
-              name="username"
-              type="text"
-              autoComplete="username"
-              required
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                borderBottom: '1px solid rgba(255,255,255,0.2)',
-                color: '#fff',
-                fontFamily: 'var(--font-sans)',
-                fontSize: '14px',
-                padding: '10px 0',
-                outline: 'none',
-                width: '100%',
-              }}
-            />
-          </div>
-
-          {/* Password */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <label
-              htmlFor="password"
-              style={{
-                fontFamily: 'var(--font-sans)',
-                fontSize: '9px',
-                letterSpacing: '0.35em',
-                textTransform: 'uppercase',
-                color: '#fff',
-                opacity: 0.45,
-              }}
-            >
-              Password
-            </label>
-            <div style={{ position: 'relative' }}>
+        {step === 'email' ? (
+          <form onSubmit={requestCode} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <label htmlFor="admin-email" style={labelStyle}>Email</label>
               <input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                autoComplete="current-password"
+                id="admin-email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                autoFocus
                 required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: `1px solid ${error ? 'rgba(255,100,100,0.5)' : 'rgba(255,255,255,0.2)'}`,
-                  color: '#fff',
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: '14px',
-                  padding: '10px 32px 10px 0',
-                  outline: 'none',
-                  width: '100%',
-                }}
+                value={email}
+                onChange={event => setEmail(event.target.value)}
+                style={inputStyle}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Hide password' : 'Show password'}
-                style={{
-                  position: 'absolute',
-                  right: 0,
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '4px',
-                  color: 'rgba(255,255,255,0.35)',
-                  display: 'flex',
-                  alignItems: 'center',
-                }}
-              >
-                {showPassword ? (
-                  // Eye-off
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                    <line x1="1" y1="1" x2="23" y2="23" />
-                  </svg>
-                ) : (
-                  // Eye
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                    <circle cx="12" cy="12" r="3" />
-                  </svg>
-                )}
-              </button>
             </div>
-          </div>
 
-          {/* Error */}
-          {error && (
-            <p
+            {error && (
+              <p role="alert" style={{ color: '#ffaaa0', fontFamily: 'var(--font-sans)', fontSize: '12px', lineHeight: 1.6 }}>
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={pending}
+              style={{ ...buttonStyle, cursor: pending ? 'not-allowed' : 'pointer', opacity: pending ? 0.5 : 1 }}
+            >
+              {pending ? 'Sending...' : 'Send code'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={verifyCode} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            <p style={{ color: 'rgba(242,240,236,0.58)', fontFamily: 'var(--font-sans)', fontSize: '13px', lineHeight: 1.7 }}>
+              A 6-digit code was sent to <span style={{ color: '#f2f0ec' }}>{email}</span>.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              <label htmlFor="admin-code" style={labelStyle}>Verification code</label>
+              <input
+                id="admin-code"
+                name="code"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="\d{6}"
+                maxLength={6}
+                autoFocus
+                required
+                value={code}
+                onChange={event => setCode(event.target.value.replace(/\D/g, ''))}
+                style={{ ...inputStyle, fontSize: '20px', letterSpacing: '0.45em' }}
+              />
+            </div>
+
+            {error && (
+              <p role="alert" style={{ color: '#ffaaa0', fontFamily: 'var(--font-sans)', fontSize: '12px', lineHeight: 1.6 }}>
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={pending}
+              style={{ ...buttonStyle, cursor: pending ? 'not-allowed' : 'pointer', opacity: pending ? 0.5 : 1 }}
+            >
+              {pending ? 'Verifying...' : 'Sign in'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setStep('email')
+                setCode('')
+                setError('')
+              }}
               style={{
+                alignSelf: 'flex-start',
+                background: 'transparent',
+                border: 0,
+                color: 'rgba(242,240,236,0.5)',
+                cursor: 'pointer',
                 fontFamily: 'var(--font-sans)',
-                fontSize: '11px',
-                letterSpacing: '0.05em',
-                color: 'rgba(255,100,100,0.85)',
-                margin: 0,
+                fontSize: '10px',
+                letterSpacing: '0.2em',
+                padding: '0.25rem 0',
+                textTransform: 'uppercase',
               }}
             >
-              {error}
-            </p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading}
-            style={{
-              marginTop: '8px',
-              background: 'transparent',
-              border: '1px solid rgba(255,255,255,0.25)',
-              color: '#fff',
-              fontFamily: 'var(--font-sans)',
-              fontSize: '9px',
-              letterSpacing: '0.35em',
-              textTransform: 'uppercase',
-              padding: '14px 24px',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.5 : 1,
-              transition: 'opacity 0.2s',
-            }}
-          >
-            {loading ? 'Signing in...' : 'Sign in'}
-          </button>
-        </form>
+              Use a different email
+            </button>
+          </form>
+        )}
       </div>
     </div>
   )

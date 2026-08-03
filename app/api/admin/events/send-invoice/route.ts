@@ -37,7 +37,7 @@ export async function POST(req: Request) {
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: event.clientEmail,
-    subject: `Invoice — ${event.service} with Marla McLeod`,
+    subject: `Invoice | ${event.service} with Marla McLeod`,
     html: invoiceHtml({
       clientName: event.clientName,
       clientEmail: event.clientEmail,

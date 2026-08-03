@@ -1,37 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-const inputStyle: React.CSSProperties = {
-  display: 'block',
-  width: '100%',
-  background: 'transparent',
-  border: 'none',
-  borderBottom: '1px solid rgba(255,255,255,0.15)',
-  color: '#fff',
-  fontFamily: 'var(--font-sans)',
-  fontSize: '13px',
-  letterSpacing: '0.05em',
-  padding: '0.75rem 0',
-  outline: 'none',
-  transition: 'border-color 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-}
-
-const labelStyle: React.CSSProperties = {
-  fontFamily: 'var(--font-sans)',
-  fontSize: '9px',
-  letterSpacing: '0.3em',
-  textTransform: 'uppercase' as const,
-  opacity: 0.4,
-  display: 'block',
-  marginBottom: '0.5rem',
-}
-
 const SERVICES = [
-  'Wedding Photography — Engagement ($350)',
-  'Wedding Photography — Elopement ($900)',
-  'Wedding Photography — Full Day (from $2,500)',
+  'Wedding Photography - Engagement ($350)',
+  'Wedding Photography - Elopement ($900)',
+  'Wedding Photography - Full Day (from $2,500)',
   'Personal Styling ($150/hr)',
   'Brand Styling (from $500)',
   'Personal Portraits ($250)',
@@ -42,9 +17,9 @@ const SERVICES = [
 ]
 
 const CATEGORY_TO_SERVICE: Record<string, string> = {
-  'Wedding Photography': 'Wedding Photography — Engagement ($350)',
-  'Styling': 'Personal Styling ($150/hr)',
-  'Photography': 'Personal Portraits ($250)',
+  'Wedding Photography': 'Wedding Photography - Engagement ($350)',
+  Styling: 'Personal Styling ($150/hr)',
+  Photography: 'Personal Portraits ($250)',
   'Personal Shopping': 'Personal Shopping (10%)',
 }
 
@@ -63,24 +38,25 @@ export default function ContactForm() {
   useEffect(() => {
     const category = searchParams.get('service')
     if (category && CATEGORY_TO_SERVICE[category]) {
-      setForm(prev => ({ ...prev, service: CATEGORY_TO_SERVICE[category] }))
+      setForm(previous => ({ ...previous, service: CATEGORY_TO_SERVICE[category] }))
     }
   }, [searchParams])
 
-  const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm(prev => ({ ...prev, [field]: e.target.value }))
+  const set = (field: keyof typeof form) => (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => setForm(previous => ({ ...previous, [field]: event.target.value }))
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault()
     setStatus('sending')
 
     try {
-      const res = await fetch('/api/contact', {
+      const response = await fetch('/api/contact', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(form),
       })
-      if (!res.ok) throw new Error()
+      if (!response.ok) throw new Error('Inquiry could not be sent')
       setStatus('sent')
     } catch {
       setStatus('error')
@@ -89,149 +65,76 @@ export default function ContactForm() {
 
   if (status === 'sent') {
     return (
-      <p
-        style={{
-          fontFamily: 'var(--font-display)',
-          fontSize: '1.5rem',
-          fontWeight: 300,
-          letterSpacing: '0.06em',
-          opacity: 0.7,
-        }}
-      >
-        Thank you. We&apos;ll be in touch.
-      </p>
+      <div className="form-success" role="status">
+        <h2 className="form-success__title">Inquiry received.</h2>
+        <p className="form-message">Thank you for sharing your vision. Marla will be in touch soon.</p>
+      </div>
     )
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-      <div className="two-col-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        <div>
-          <label htmlFor="name" style={labelStyle}>Name *</label>
-          <input
-            id="name"
-            type="text"
-            required
-            value={form.name}
-            onChange={set('name')}
-            style={inputStyle}
-            onFocus={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.6)')}
-            onBlur={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.15)')}
-          />
+    <form className="contact-form" onSubmit={handleSubmit} aria-busy={status === 'sending'}>
+      <div className="form-grid">
+        <div className="form-field">
+          <label htmlFor="name">Name *</label>
+          <input id="name" name="name" type="text" autoComplete="name" required value={form.name} onChange={set('name')} />
         </div>
-        <div>
-          <label htmlFor="email" style={labelStyle}>Email *</label>
-          <input
-            id="email"
-            type="email"
-            required
-            value={form.email}
-            onChange={set('email')}
-            style={inputStyle}
-            onFocus={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.6)')}
-            onBlur={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.15)')}
-          />
+        <div className="form-field">
+          <label htmlFor="email">Email *</label>
+          <input id="email" name="email" type="email" autoComplete="email" required value={form.email} onChange={set('email')} />
         </div>
       </div>
 
-      <div className="two-col-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        <div>
-          <label htmlFor="phone" style={labelStyle}>Phone</label>
-          <input
-            id="phone"
-            type="tel"
-            value={form.phone}
-            onChange={set('phone')}
-            style={inputStyle}
-            onFocus={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.6)')}
-            onBlur={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.15)')}
-          />
+      <div className="form-grid">
+        <div className="form-field">
+          <label htmlFor="phone">Phone</label>
+          <input id="phone" name="phone" type="tel" autoComplete="tel" value={form.phone} onChange={set('phone')} />
         </div>
-        <div>
-          <label htmlFor="location" style={labelStyle}>Where are you located?</label>
+        <div className="form-field">
+          <label htmlFor="location">Where are you located?</label>
           <input
             id="location"
+            name="location"
             type="text"
+            autoComplete="address-level2"
+            placeholder="City, State"
             value={form.location}
             onChange={set('location')}
-            placeholder="City, State"
-            style={inputStyle}
-            onFocus={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.6)')}
-            onBlur={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.15)')}
           />
         </div>
       </div>
 
-      <div className="two-col-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        <div>
-          <label htmlFor="service" style={labelStyle}>Service *</label>
-          <select
-            id="service"
-            required
-            value={form.service}
-            onChange={set('service')}
-            style={{
-              ...inputStyle,
-              appearance: 'none',
-              cursor: 'pointer',
-              color: form.service ? '#fff' : 'rgba(255,255,255,0.3)',
-            }}
-            onFocus={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.6)')}
-            onBlur={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.15)')}
-          >
-            <option value="" disabled style={{ background: '#000' }}>Select a service</option>
-            {SERVICES.map(s => (
-              <option key={s} value={s} style={{ background: '#000' }}>{s}</option>
-            ))}
+      <div className="form-grid">
+        <div className="form-field">
+          <label htmlFor="service">Service *</label>
+          <select id="service" name="service" required value={form.service} onChange={set('service')}>
+            <option value="" disabled>Select a service</option>
+            {SERVICES.map(service => <option key={service}>{service}</option>)}
           </select>
         </div>
       </div>
 
-      <div>
-        <label htmlFor="message" style={labelStyle}>Your vision *</label>
+      <div className="form-field">
+        <label htmlFor="message">Your vision *</label>
         <textarea
           id="message"
+          name="message"
           required
           rows={5}
           value={form.message}
           onChange={set('message')}
-          style={{
-            ...inputStyle,
-            resize: 'none',
-            lineHeight: 1.7,
-          }}
-          onFocus={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.6)')}
-          onBlur={e => (e.target.style.borderBottomColor = 'rgba(255,255,255,0.15)')}
+          placeholder="Tell Marla about the project, timing, and what you need."
         />
       </div>
 
       {status === 'error' && (
-        <p style={{ fontFamily: 'var(--font-sans)', fontSize: '11px', opacity: 0.5 }}>
+        <p className="form-message" data-state="error" role="alert">
           Something went wrong. Please try again or reach out on Instagram.
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={status === 'sending'}
-        style={{
-          alignSelf: 'flex-start',
-          background: 'transparent',
-          border: '1px solid rgba(255,255,255,0.25)',
-          color: '#fff',
-          fontFamily: 'var(--font-sans)',
-          fontSize: '9px',
-          letterSpacing: '0.35em',
-          textTransform: 'uppercase',
-          padding: '1rem 2rem',
-          cursor: status === 'sending' ? 'wait' : 'pointer',
-          opacity: status === 'sending' ? 0.4 : 0.8,
-          transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-        onMouseEnter={e => { if (status !== 'sending') e.currentTarget.style.opacity = '1' }}
-        onMouseLeave={e => { if (status !== 'sending') e.currentTarget.style.opacity = '0.8' }}
-      >
-        {status === 'sending' ? 'Sending…' : 'Send Inquiry'}
+      <button className="form-submit" type="submit" disabled={status === 'sending'}>
+        {status === 'sending' ? 'Sending...' : 'Send inquiry'}
       </button>
     </form>
   )

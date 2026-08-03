@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import { upload } from '@vercel/blob/client'
 
 const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
@@ -31,9 +32,11 @@ export default function CreateCollectionModal({ onClose, onCreated }: Props) {
   const [category, setCategory] = useState('')
   const [year, setYear] = useState(String(new Date().getFullYear()))
   const [files, setFiles] = useState<File[]>([])
+  const [thumbnailName, setThumbnailName] = useState('')
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [uploadStatus, setUploadStatus] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
 
@@ -41,8 +44,28 @@ export default function CreateCollectionModal({ onClose, onCreated }: Props) {
     const arr = Array.from(incoming).filter(f => f.type.startsWith('image/'))
     setFiles(prev => {
       const existing = new Set(prev.map(f => f.name))
-      return [...prev, ...arr.filter(f => !existing.has(f.name))]
+      const next = [...prev, ...arr.filter(f => !existing.has(f.name))]
+      setThumbnailName(current => current || next[0]?.name || '')
+      return next
     })
+  }
+
+  function slugify(value: string) {
+    return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  }
+
+  async function getDimensions(file: File): Promise<{ width: number; height: number }> {
+    const objectUrl = URL.createObjectURL(file)
+    try {
+      return await new Promise((resolve, reject) => {
+        const image = new Image()
+        image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight })
+        image.onerror = () => reject(new Error(`Could not read ${file.name}`))
+        image.src = objectUrl
+      })
+    } finally {
+      URL.revokeObjectURL(objectUrl)
+    }
   }
 
   const onDrop = useCallback((e: React.DragEvent) => {
@@ -90,17 +113,46 @@ export default function CreateCollectionModal({ onClose, onCreated }: Props) {
     }
     setError('')
     setUploading(true)
-    const fd = new FormData()
-    fd.append('title', title.trim())
-    fd.append('category', category.trim())
-    fd.append('year', year)
-    for (const f of files) fd.append('images', f)
+    try {
+      const slug = slugify(title.trim())
+      const uploaded: Array<{ src: string; width: number; height: number; fileName: string }> = []
 
-    const res = await fetch('/api/admin/collections', { method: 'POST', body: fd })
-    const data = await res.json()
-    setUploading(false)
-    if (!res.ok) { setError(data.error ?? 'Upload failed'); return }
-    onCreated(data.slug, title.trim())
+      for (let index = 0; index < files.length; index++) {
+        const file = files[index]
+        const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+        setUploadStatus(`Uploading ${index + 1} of ${files.length}`)
+        const [blob, dimensions] = await Promise.all([
+          upload(`images/projects/${slug}/${index + 1}.${extension}`, file, {
+            access: 'public',
+            handleUploadUrl: '/api/admin/blob-upload',
+            multipart: file.size > 5 * 1024 * 1024,
+          }),
+          getDimensions(file),
+        ])
+        uploaded.push({ src: blob.url, ...dimensions, fileName: file.name })
+      }
+
+      const coverImage = uploaded.find(image => image.fileName === thumbnailName)?.src ?? uploaded[0].src
+      const response = await fetch('/api/admin/collections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title.trim(),
+          category: category.trim(),
+          year,
+          coverImage,
+          images: uploaded.map(({ fileName, ...image }) => image),
+        }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error ?? 'Upload failed')
+      onCreated(data.slug, title.trim())
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : 'Upload failed')
+    } finally {
+      setUploading(false)
+      setUploadStatus('')
+    }
   }
 
   return (
@@ -205,12 +257,20 @@ export default function CreateCollectionModal({ onClose, onCreated }: Props) {
           {files.length > 0 && (
             <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingBottom: '4px' }}>
               {files.slice(0, 12).map((f, i) => (
-                <img
+                <button
                   key={i}
-                  src={URL.createObjectURL(f)}
-                  alt=""
-                  style={{ width: '64px', height: '64px', objectFit: 'cover', flexShrink: 0, opacity: 0.8 }}
-                />
+                  type="button"
+                  onClick={() => setThumbnailName(f.name)}
+                  title={thumbnailName === f.name ? 'Current thumbnail' : 'Set as thumbnail'}
+                  style={{ width: '68px', height: '68px', padding: '2px', border: thumbnailName === f.name ? '2px solid #fff' : '2px solid transparent', background: 'transparent', flexShrink: 0, cursor: 'pointer', position: 'relative' }}
+                >
+                  <img
+                    src={URL.createObjectURL(f)}
+                    alt=""
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: thumbnailName === f.name ? 1 : 0.55 }}
+                  />
+                  {thumbnailName === f.name && <span style={{ position: 'absolute', left: 3, right: 3, bottom: 3, padding: '3px', background: 'rgba(0,0,0,.75)', color: '#fff', ...labelStyle, fontSize: '6px' }}>Thumbnail</span>}
+                </button>
               ))}
               {files.length > 12 && (
                 <div style={{ width: '64px', height: '64px', background: '#111', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', ...labelStyle, fontSize: '8px', opacity: 0.4, color: '#fff' }}>
@@ -229,7 +289,7 @@ export default function CreateCollectionModal({ onClose, onCreated }: Props) {
             Cancel
           </button>
           <button onClick={submit} disabled={uploading} style={{ ...labelStyle, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '9px 20px', cursor: uploading ? 'default' : 'pointer', opacity: uploading ? 0.5 : 1 }}>
-            {uploading ? `Uploading ${files.length} images…` : 'Create Collection'}
+            {uploading ? uploadStatus || `Uploading ${files.length} images…` : 'Create Collection'}
           </button>
         </div>
       </div>

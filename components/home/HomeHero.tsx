@@ -4,152 +4,85 @@ import { useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { gsap } from 'gsap'
 import { useTransition } from '@/providers/PageTransitionProvider'
+import { mediaUrl } from '@/lib/media'
 
 export default function HomeHero() {
-  const quoteRef = useRef<HTMLQuoteElement>(null)
-  const statementRef = useRef<HTMLDivElement>(null)
-  const ctaRef = useRef<HTMLDivElement>(null)
-  const portraitRef = useRef<HTMLDivElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
   const { navigate } = useTransition()
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      const tl = gsap.timeline({ delay: 0.3 })
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
 
-      tl.from(quoteRef.current, {
-        opacity: 0,
-        y: 30,
-        duration: 1.6,
-        ease: 'cubic-bezier(0.16, 1, 0.3, 1)',
-      })
+    const ctx = gsap.context(() => {
+      gsap
+        .timeline({ delay: 0.2 })
+        .from('[data-home-quote]', {
+          opacity: 0,
+          y: 24,
+          duration: 1.4,
+          ease: 'cubic-bezier(0.16, 1, 0.3, 1)',
+        })
         .from(
-          statementRef.current,
-          { opacity: 0, y: 20, duration: 1.4, ease: 'cubic-bezier(0.16, 1, 0.3, 1)' },
-          '-=1.0'
-        )
-        .from(
-          ctaRef.current,
+          '[data-home-statement]',
           { opacity: 0, y: 16, duration: 1.2, ease: 'cubic-bezier(0.16, 1, 0.3, 1)' },
-          '-=0.8'
+          '-=0.9'
         )
         .from(
-          portraitRef.current,
-          { opacity: 0, duration: 1.6, ease: 'cubic-bezier(0.16, 1, 0.3, 1)' },
-          '-=1.8'
+          '[data-home-cta]',
+          { opacity: 0, y: 10, duration: 1, ease: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+          '-=0.75'
         )
-    })
+        .from(
+          '[data-home-image]',
+          { opacity: 0, scale: 1.015, duration: 1.6, ease: 'cubic-bezier(0.16, 1, 0.3, 1)' },
+          '-=1.5'
+        )
+    }, rootRef)
 
     return () => ctx.revert()
   }, [])
 
   return (
-    <div
-      className="two-col-grid"
-      style={{
-        position: 'fixed',
-        inset: 0,
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Left — text */}
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: 'clamp(2rem, 6vw, 6rem)',
-          overflowY: 'auto',
-        }}
-      >
-        <blockquote
-          ref={quoteRef}
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(1.4rem, 4vw, 3.5rem)',
-            fontWeight: 300,
-            lineHeight: 1.2,
-            letterSpacing: '0.04em',
-            color: '#fff',
-            marginBottom: '3rem',
-            fontStyle: 'italic',
-          }}
-        >
-          &ldquo;I praise you, for I am fearfully and wonderfully made. Wonderful are your works; my
-          soul knows it very well.&rdquo;
-          <cite
-            style={{
-              display: 'block',
-              fontFamily: 'var(--font-sans)',
-              fontSize: '9px',
-              fontStyle: 'normal',
-              letterSpacing: '0.3em',
-              textTransform: 'uppercase',
-              opacity: 0.45,
-              marginTop: '1.25rem',
-            }}
-          >
-            Psalm 139:14
-          </cite>
-        </blockquote>
+    <section ref={rootRef} className="original-home" aria-label="Marla McLeod introduction">
+      <div className="original-home__copy">
+        <div className="original-home__content">
+          <blockquote className="original-home__quote" data-home-quote>
+            “I praise you, for I am fearfully and wonderfully made. Wonderful are your works; my
+            soul knows it very well.”
+            <cite>Psalm 139:14</cite>
+          </blockquote>
 
-        <div ref={statementRef} className="prose" style={{ marginBottom: '3rem' }}>
-          <p style={{ marginBottom: '1em' }}>
-            My work in most ways is an encapsulation of the beauty of what it is to be human. In a
-            world where perfection is at the precipice I want to show people that it is our
-            imperfections that create beauty. That we are divinely and wonderfully made.
-          </p>
-          <p>
-            When I first started taking pictures of my friends, my ultimate goal was to show them
-            how beautiful they were just being their natural self unposed and care free. In my work
-            I try not to impose my desires for a perfect picture and just let the moment be. Entrust
-            my instincts to capture the subject at just the right moment and allow the beauty
-            that&apos;s already there to reveal itself.
-          </p>
-        </div>
+          <div className="original-home__statement" data-home-statement>
+            <p>
+              My work in most ways is an encapsulation of the beauty of what it is to be human. In a
+              world where perfection is at the precipice I want to show people that it is our
+              imperfections that create beauty. That we are divinely and wonderfully made.
+            </p>
+            <p>
+              When I first started taking pictures of my friends, my ultimate goal was to show them
+              how beautiful they were just being their natural self unposed and care free. In my work
+              I try not to impose my desires for a perfect picture and just let the moment be. Entrust
+              my instincts to capture the subject at just the right moment and allow the beauty
+              that&apos;s already there to reveal itself.
+            </p>
+          </div>
 
-        <div ref={ctaRef}>
-          <button
-            onClick={() => navigate('/work', true)}
-            style={{
-              fontFamily: 'var(--font-sans)',
-              fontSize: '10px',
-              letterSpacing: '0.35em',
-              textTransform: 'uppercase',
-              color: '#fff',
-              opacity: 0.6,
-              display: 'inline-block',
-              transition: 'opacity 400ms cubic-bezier(0.16, 1, 0.3, 1)',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: 0,
-              WebkitAppearance: 'none',
-              appearance: 'none',
-            }}
-            onMouseEnter={e => (e.currentTarget.style.opacity = '1')}
-            onMouseLeave={e => (e.currentTarget.style.opacity = '0.6')}
-          >
-            View Work &rarr;
+          <button className="text-link" data-home-cta onClick={() => navigate('/work')}>
+            View work
           </button>
         </div>
       </div>
 
-      {/* Right — portrait, full height */}
-      <div
-        ref={portraitRef}
-        className="desktop-only"
-        style={{ position: 'relative', width: '100%', height: '100%' }}
-      >
+      <div className="original-home__media" data-home-image>
         <Image
-          src="/images/marla-pfp.jpg"
+          className="original-home__image"
+          src={mediaUrl('/images/marla-pfp.jpg')}
           alt="Marla Chelsea McLeod"
           fill
           priority
-          style={{ objectFit: 'cover', objectPosition: 'center top' }}
+          sizes="(max-width: 760px) 100vw, 50vw"
         />
       </div>
-    </div>
+    </section>
   )
 }

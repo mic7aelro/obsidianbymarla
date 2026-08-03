@@ -25,11 +25,11 @@ export function inquiryConfirmationHtml({
 <body>
   <div class="wrap">
     <h1>Thank You, ${name}</h1>
-    <p>Your inquiry has been received. Marla will be in touch within 1–2 business days to discuss your project.</p>
+    <p>Your inquiry has been received. Marla will be in touch within 1-2 business days to discuss your project.</p>
     <div class="label">Service requested</div>
     <div class="value">${service}</div>
-    <p style="margin-top: 32px;">In the meantime, feel free to explore more of Marla's work on Instagram — <a href="https://instagram.com/marlizzlle" style="color:#000;">@marlizzlle</a></p>
-    <div class="footer">Marla McLeod — Fashion Stylist &amp; Photographer</div>
+    <p style="margin-top: 32px;">In the meantime, feel free to explore more of Marla's work on Instagram: <a href="https://instagram.com/marlizzlle" style="color:#000;">@marlizzlle</a></p>
+    <div class="footer">Marla McLeod | Fashion Stylist &amp; Photographer</div>
   </div>
 </body>
 </html>
@@ -43,12 +43,12 @@ export function inquiryConfirmationText({
   return [
     `Thank you, ${name}.`,
     '',
-    'Your inquiry has been received. Marla will be in touch within 1–2 business days to discuss your project.',
+    'Your inquiry has been received. Marla will be in touch within 1-2 business days to discuss your project.',
     '',
     `Service requested: ${service}`,
     '',
     'Instagram: @marlizzlle',
     '',
-    'Marla McLeod — Fashion Stylist & Photographer',
+    'Marla McLeod | Fashion Stylist & Photographer',
   ].join('\n')
 }

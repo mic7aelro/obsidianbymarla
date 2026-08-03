@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server'
-import { promises as fs } from 'fs'
-import path from 'path'
 import { getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
 import clientPromise from '@/lib/mongodb'
@@ -50,44 +48,29 @@ export async function PATCH(req: Request) {
 export async function POST(req: Request) {
   if (!(await requireAuth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const formData = await req.formData()
-  const title = formData.get('title') as string
-  const category = formData.get('category') as string
-  const year = parseInt(formData.get('year') as string) || new Date().getFullYear()
-  const files = formData.getAll('images') as File[]
+  const body = await req.json()
+  const title = typeof body.title === 'string' ? body.title.trim() : ''
+  const category = typeof body.category === 'string' ? body.category.trim() : ''
+  const year = Number.parseInt(String(body.year), 10) || new Date().getFullYear()
+  const images = Array.isArray(body.images) ? body.images.filter((image: unknown): image is { src: string; width: number; height: number } => {
+    if (!image || typeof image !== 'object') return false
+    const candidate = image as Record<string, unknown>
+    return typeof candidate.src === 'string' && Number.isFinite(candidate.width) && Number.isFinite(candidate.height)
+  }) : []
+  const coverImage = typeof body.coverImage === 'string' ? body.coverImage : ''
 
-  if (!title || !category || files.length === 0) {
+  if (!title || !category || images.length === 0 || !images.some((image: { src: string }) => image.src === coverImage)) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
   }
 
   const slug = slugify(title)
-  const dir = path.join(process.cwd(), 'public', 'images', 'projects', slug)
-  await fs.mkdir(dir, { recursive: true })
-
-  const sorted = [...files].sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true }))
-  const images: { src: string; width: number; height: number }[] = []
-
-  for (let i = 0; i < sorted.length; i++) {
-    const file = sorted[i]
-    const ext = file.name.split('.').pop()?.toLowerCase() ?? 'jpg'
-    const filename = `${i + 1}.${ext}`
-    const buf = Buffer.from(await file.arrayBuffer())
-    await fs.writeFile(path.join(dir, filename), buf)
-    images.push({ src: `/images/projects/${slug}/${filename}`, width: 0, height: 0 })
-  }
-
-  if (images.length > 0) {
-    const firstExt = images[0].src.split('.').pop()
-    const firstPath = path.join(dir, `1.${firstExt}`)
-    await fs.copyFile(firstPath, path.join(dir, 'cover.jpg')).catch(() => {})
-  }
 
   const collection = {
     slug,
     title,
     year,
     category,
-    image: `/images/projects/${slug}/cover.jpg`,
+    image: coverImage,
     coverAlt: `${title} by Marla McLeod`,
     images,
     createdAt: new Date(),
@@ -95,5 +78,11 @@ export async function POST(req: Request) {
 
   const col = await getCollectionsCol()
   await col.updateOne({ slug }, { $set: collection }, { upsert: true })
+  const client = await clientPromise
+  await client.db('marla').collection('collection_curation').updateOne(
+    { slug },
+    { $set: { slug, imageOrder: images.map((image: { src: string }) => image.src), coverImage, updatedAt: new Date() } },
+    { upsert: true }
+  )
   return NextResponse.json({ ok: true, slug })
 }

@@ -28,7 +28,7 @@ export function invoiceHtml({ clientName, service, date }: InvoiceProps): string
 <body>
   <div class="wrap">
     <h1>Invoice</h1>
-    <p class="sub">Marla McLeod — Fashion Stylist &amp; Photographer</p>
+    <p class="sub">Marla McLeod | Fashion Stylist &amp; Photographer</p>
 
     <div class="label">Client</div>
     <div class="value">${clientName}</div>
@@ -52,10 +52,10 @@ export function invoiceHtml({ clientName, service, date }: InvoiceProps): string
     </div>
 
     <p style="margin-top: 32px; font-size: 13px; line-height: 1.8; opacity: 0.7;">
-      Questions? Reply to this email or reach out on Instagram — <a href="https://instagram.com/marlizzlle" style="color: #000;">@marlizzlle</a>
+      Questions? Reply to this email or reach out on Instagram: <a href="https://instagram.com/marlizzlle" style="color: #000;">@marlizzlle</a>
     </p>
 
-    <div class="footer">Marla McLeod — obsidianstudiosco@gmail.com</div>
+    <div class="footer">Marla McLeod | obsidianstudiosco@gmail.com</div>
   </div>
 </body>
 </html>
@@ -64,7 +64,7 @@ export function invoiceHtml({ clientName, service, date }: InvoiceProps): string
 
 export function invoiceText({ clientName, service, date }: InvoiceProps): string {
   return [
-    'INVOICE — MARLA McLEOD',
+    'INVOICE | MARLA McLEOD',
     '',
     `Client: ${clientName}`,
     `Service: ${service}`,
@@ -79,7 +79,7 @@ export function invoiceText({ clientName, service, date }: InvoiceProps): string
     'Please include your name and service in the payment note.',
     'Once your deposit is received, your booking will be confirmed.',
     '',
-    'Marla McLeod — obsidianstudiosco@gmail.com',
+    'Marla McLeod | obsidianstudiosco@gmail.com',
   ]
     .filter((l) => l !== null)
     .join('\n')

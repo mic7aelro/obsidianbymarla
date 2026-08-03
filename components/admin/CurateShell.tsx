@@ -14,6 +14,7 @@ interface Gallery {
   slug: string
   title: string
   disabled: boolean
+  coverImage: string
   images: CurateImage[]
 }
 
@@ -39,9 +40,18 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
   })
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [saving, setSaving] = useState(false)
+  const [dragged, setDragged] = useState<string | null>(null)
+  const [covers, setCovers] = useState<Record<string, string>>(() =>
+    Object.fromEntries(galleries.map(gallery => [gallery.slug, gallery.coverImage]))
+  )
+  const [orders, setOrders] = useState<Record<string, string[]>>(() =>
+    Object.fromEntries(galleries.map(gallery => [gallery.slug, gallery.images.map(image => image.src)]))
+  )
 
   const gallery = galleries[galleryIndex]
-  const allImages = gallery?.images ?? []
+  const imageLookup = new Map(gallery?.images.map(image => [image.src, image]) ?? [])
+  const allImages = (orders[gallery?.slug] ?? []).map(src => imageLookup.get(src)).filter((image): image is CurateImage => Boolean(image))
+  const coverImage = covers[gallery?.slug]
   const kept = allImages.filter(i => !hidden.has(i.src)).length
 
   useEffect(() => { setSelected(new Set()) }, [galleryIndex])
@@ -116,6 +126,40 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ slug, disabled: isNowDisabled }),
     })
+  }
+
+  async function saveCuration(slug: string, updates: { imageOrder?: string[]; coverImage?: string }) {
+    setSaving(true)
+    try {
+      const response = await fetch('/api/admin/curate', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, ...updates }),
+      })
+      if (!response.ok) throw new Error('Could not save gallery changes')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function moveImage(target: string) {
+    if (!gallery || !dragged || dragged === target) return
+    const current = orders[gallery.slug]
+    const from = current.indexOf(dragged)
+    const to = current.indexOf(target)
+    if (from < 0 || to < 0) return
+    const next = [...current]
+    next.splice(from, 1)
+    next.splice(to, 0, dragged)
+    setOrders(previous => ({ ...previous, [gallery.slug]: next }))
+    setDragged(null)
+    void saveCuration(gallery.slug, { imageOrder: next })
+  }
+
+  function setThumbnail(src: string) {
+    if (!gallery || coverImage === src) return
+    setCovers(previous => ({ ...previous, [gallery.slug]: src }))
+    void saveCuration(gallery.slug, { coverImage: src })
   }
 
   async function toggleSingleImage(src: string) {
@@ -253,8 +297,8 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
         />
       )}
 
-      {/* Image grid — columns layout for natural aspect ratios */}
-      <div style={{ padding: '3px', columnCount: 4, columnGap: '3px' }}>
+      {/* Ordered image grid */}
+      <div style={{ padding: '3px', display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '3px' }}>
         {allImages.map((img, i) => {
           const isSelected = selected.has(img.src)
           const isHidden = hidden.has(img.src)
@@ -262,11 +306,27 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
             <div
               key={img.src}
               onClick={() => toggleSelect(img.src)}
+              draggable
+              onDragStart={event => {
+                setDragged(img.src)
+                event.dataTransfer.effectAllowed = 'move'
+                event.dataTransfer.setData('text/plain', img.src)
+              }}
+              onDragEnd={() => setDragged(null)}
+              onDragOver={event => {
+                event.preventDefault()
+                event.dataTransfer.dropEffect = 'move'
+              }}
+              onDrop={event => {
+                event.preventDefault()
+                event.stopPropagation()
+                moveImage(img.src)
+              }}
               style={{
                 position: 'relative',
-                breakInside: 'avoid',
-                marginBottom: '3px',
-                cursor: 'pointer',
+                aspectRatio: '4 / 5',
+                overflow: 'hidden',
+                cursor: dragged ? 'grabbing' : 'grab',
                 outline: isSelected ? '3px solid rgba(255,255,255,0.9)' : '3px solid transparent',
                 outlineOffset: '-3px',
                 transition: 'outline-color 0.1s',
@@ -284,7 +344,8 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
                 style={{
                   display: 'block',
                   width: '100%',
-                  height: 'auto',
+                  height: '100%',
+                  objectFit: 'cover',
                   opacity: isHidden ? 0.2 : 1,
                   transition: 'opacity 0.2s',
                 }}
@@ -295,12 +356,14 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
                 {i + 1}
               </div>
 
-              {/* Hidden label */}
-              {isHidden && (
-                <div style={{ position: 'absolute', top: '8px', right: '10px', ...labelStyle, fontSize: '8px', color: 'rgba(255,100,100,0.9)' }}>
-                  Hidden
-                </div>
-              )}
+              <div style={{ position: 'absolute', top: '8px', right: '10px', display: 'flex', gap: '6px', alignItems: 'center' }}>
+                {coverImage === img.src && (
+                  <span style={{ ...labelStyle, fontSize: '8px', color: '#fff', background: 'rgba(0,0,0,0.65)', padding: '4px 6px' }}>Thumbnail</span>
+                )}
+                {isHidden && (
+                  <span style={{ ...labelStyle, fontSize: '8px', color: 'rgba(255,100,100,0.9)', background: 'rgba(0,0,0,0.65)', padding: '4px 6px' }}>Hidden</span>
+                )}
+              </div>
 
               {/* Selected checkmark */}
               {isSelected && (
@@ -330,6 +393,23 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
               >
                 {isHidden ? 'Unhide' : 'Hide'}
               </button>
+
+              <button
+                onClick={event => { event.stopPropagation(); setThumbnail(img.src) }}
+                disabled={coverImage === img.src}
+                style={{
+                  position: 'absolute', bottom: '10px', left: '74px',
+                  ...labelStyle, fontSize: '8px',
+                  background: coverImage === img.src ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.7)',
+                  border: '1px solid rgba(255,255,255,0.22)',
+                  color: coverImage === img.src ? '#000' : '#fff',
+                  padding: '3px 7px', cursor: coverImage === img.src ? 'default' : 'pointer',
+                  opacity: coverImage === img.src ? 1 : 0, transition: 'opacity 0.15s',
+                }}
+                className="thumbnail-toggle"
+              >
+                {coverImage === img.src ? 'Current thumbnail' : 'Set thumbnail'}
+              </button>
             </div>
           )
         })}
@@ -338,11 +418,12 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
       {/* Footer summary */}
       <div style={{ padding: '2rem', borderTop: '1px solid #1a1a1a', display: 'flex', gap: '2rem', alignItems: 'center' }}>
         <p style={{ ...labelStyle, color: 'rgba(100,220,120,0.7)' }}>{totalKept} of {totalAll} kept across all galleries</p>
-        <p style={{ ...labelStyle, opacity: 0.2, color: '#fff' }}>H hide · U unhide · click image to toggle</p>
+        <p style={{ ...labelStyle, opacity: 0.2, color: '#fff' }}>Drag to reorder · set thumbnail independently · H hide · U unhide</p>
       </div>
 
       <style>{`
-        .curate-cell:hover .img-toggle { opacity: 1 !important; }
+        .curate-cell:hover .img-toggle,
+        .curate-cell:hover .thumbnail-toggle { opacity: 1 !important; }
       `}</style>
     </div>
   )

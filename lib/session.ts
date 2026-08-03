@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 
 export interface SessionData {
   isLoggedIn: boolean
+  email?: string
 }
 
 export const sessionOptions: SessionOptions = {

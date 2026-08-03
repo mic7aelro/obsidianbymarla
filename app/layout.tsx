@@ -5,11 +5,22 @@ import GrainOverlay from '@/components/layout/GrainOverlay'
 import NavWrapper from '@/components/layout/NavWrapper'
 import SmoothScrollProvider from '@/providers/SmoothScrollProvider'
 import PageTransitionProvider from '@/providers/PageTransitionProvider'
+import Link from 'next/link'
+import { mediaUrl } from '@/lib/media'
 
 export const metadata: Metadata = {
-  title: 'Marla McLeod — Fashion Stylist & Photographer',
+  title: {
+    default: 'Marla McLeod | Fashion Stylist & Photographer',
+    template: '%s | Marla McLeod',
+  },
   description:
     'Marla McLeod is a Miami-based fashion stylist, photographer, and creative director.',
+  metadataBase: new URL('https://obsidianbymarla.com'),
+  openGraph: {
+    title: 'Marla McLeod | Fashion Stylist & Photographer',
+    description: 'Fashion styling, photography, and creative direction by Marla McLeod.',
+    images: [mediaUrl('/images/projects/rylee-2023/cover.jpg')],
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -21,17 +32,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <PageTransitionProvider>
             <NavWrapper />
             <main>{children}</main>
-            <footer style={{
-              padding: '2rem 2.5rem',
-              borderTop: 'none',
-              fontFamily: 'var(--font-sans)',
-              fontSize: '9px',
-              letterSpacing: '0.3em',
-              textTransform: 'uppercase',
-              color: 'rgba(255,255,255,0.3)',
-              textAlign: 'right',
-            }}>
-              © 2026 — All rights reserved
+            <footer className="site-footer">
+              <div className="site-footer__meta">
+                <Link href="/about">About Marla</Link>
+                <span>© 2026 All rights reserved</span>
+              </div>
             </footer>
           </PageTransitionProvider>
         </SmoothScrollProvider>
