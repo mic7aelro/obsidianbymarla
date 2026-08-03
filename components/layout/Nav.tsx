@@ -37,7 +37,8 @@ export default function Nav() {
     <>
       <nav className="site-nav" aria-label="Primary navigation">
         <Link className="site-nav__wordmark" href="/">
-          Obsidian by Marla Chelsea McLeod
+          <span className="site-nav__wordmark-desktop">Obsidian by Marla Chelsea McLeod</span>
+          <span className="site-nav__wordmark-mobile">Obsidian by Marla</span>
         </Link>
 
         <ul className="site-nav__links">

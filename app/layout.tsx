@@ -19,7 +19,18 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'Marla McLeod | Fashion Stylist & Photographer',
     description: 'Fashion styling, photography, and creative direction by Marla McLeod.',
-    images: [mediaUrl('/images/projects/rylee-2023/cover.jpg')],
+    images: [
+      {
+        url: mediaUrl('/images/marla-pfp.jpg'),
+        alt: 'Marla Chelsea McLeod',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Marla McLeod | Fashion Stylist & Photographer',
+    description: 'Fashion styling, photography, and creative direction by Marla McLeod.',
+    images: [mediaUrl('/images/marla-pfp.jpg')],
   },
 }
 

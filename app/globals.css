@@ -223,6 +223,10 @@ input:-webkit-autofill:focus {
   white-space: nowrap;
 }
 
+.site-nav__wordmark-mobile {
+  display: none;
+}
+
 .site-nav__social {
   grid-column: 3;
   grid-row: 1;
@@ -966,6 +970,14 @@ body:has(.admin-route) .site-footer {
     overflow: hidden;
     text-align: left;
     text-overflow: ellipsis;
+  }
+
+  .site-nav__wordmark-desktop {
+    display: none;
+  }
+
+  .site-nav__wordmark-mobile {
+    display: inline;
   }
 
   .original-home__copy {
