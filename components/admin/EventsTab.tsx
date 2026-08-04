@@ -17,6 +17,17 @@ const STATUS_LABELS: Record<EventStatus, string> = {
   completed: 'Completed',
 }
 
+function formatEventTime(value?: string) {
+  if (!value) return null
+  const [hour, minute] = value.split(':').map(Number)
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return value
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone: 'UTC',
+  }).format(new Date(Date.UTC(2000, 0, 1, hour, minute)))
+}
+
 const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
   fontSize: '9px',
@@ -322,7 +333,9 @@ export default function EventsTab() {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
+                        timeZone: 'UTC',
                       })}
+                      {formatEventTime(event.time) ? ` at ${formatEventTime(event.time)}` : ''}
                     </p>
                   </>
                 )}

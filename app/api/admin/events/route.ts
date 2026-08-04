@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { inquiryId, clientName, clientEmail, service, date, location, notes } = await req.json()
+  const { inquiryId, clientName, clientEmail, service, date, time, location, notes } = await req.json()
   if (!inquiryId || !clientName || !clientEmail || !service) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
@@ -61,6 +61,7 @@ export async function POST(req: Request) {
     clientEmail,
     service,
     date: date ? new Date(date) : undefined,
+    time: time || undefined,
     location: location || undefined,
     notes: notes || undefined,
     depositPaid: false,
@@ -81,7 +82,8 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { id, depositPaid, status, archived, notes } = await req.json()
+  const body = await req.json()
+  const { id } = body
   if (!id) {
     return NextResponse.json({ error: 'Missing id' }, { status: 400 })
   }
@@ -91,17 +93,32 @@ export async function PATCH(req: Request) {
   const db = client.db(process.env.MONGODB_DB ?? 'marla')
 
   const updates: Record<string, unknown> = { updatedAt: now }
-  if (depositPaid !== undefined) updates.depositPaid = depositPaid
-  if (status !== undefined) updates.status = status
-  if (archived !== undefined) updates.archived = archived
-  if (notes !== undefined) updates.notes = notes
+  const unset: Record<string, ''> = {}
+  const editableFields = ['clientName', 'clientEmail', 'service', 'location', 'time', 'depositPaid', 'status', 'archived', 'notes'] as const
+
+  editableFields.forEach((field) => {
+    if (!(field in body)) return
+    if (body[field] === '' && ['location', 'time', 'notes'].includes(field)) {
+      unset[field] = ''
+    } else {
+      updates[field] = body[field]
+    }
+  })
+
+  if ('date' in body) {
+    if (body.date) updates.date = new Date(body.date)
+    else unset.date = ''
+  }
 
   // If marking deposit paid, auto-confirm
-  if (depositPaid === true) updates.status = 'confirmed'
+  if (body.depositPaid === true && !body.status) updates.status = 'confirmed'
 
   await db.collection('events').updateOne(
     { _id: new ObjectId(id) },
-    { $set: updates }
+    {
+      $set: updates,
+      ...(Object.keys(unset).length > 0 ? { $unset: unset } : {}),
+    }
   )
 
   return NextResponse.json({ ok: true })

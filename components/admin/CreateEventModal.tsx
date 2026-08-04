@@ -36,6 +36,7 @@ export default function CreateEventModal({
   onCreated: () => void
 }) {
   const [date, setDate] = useState('')
+  const [time, setTime] = useState('')
   const [location, setLocation] = useState(inquiry.location ?? '')
   const [notes, setNotes] = useState('')
   const [loading, setLoading] = useState(false)
@@ -55,6 +56,7 @@ export default function CreateEventModal({
         clientEmail: inquiry.email,
         service: inquiry.service,
         date: date || undefined,
+        time: time || undefined,
         location: location || undefined,
         notes: notes || undefined,
       }),
@@ -116,14 +118,25 @@ export default function CreateEventModal({
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          <div>
-            <label style={labelStyle}>Date (optional)</label>
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              style={{ ...inputStyle, colorScheme: 'dark' }}
-            />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            <div>
+              <label style={labelStyle}>Date (optional)</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                style={{ ...inputStyle, colorScheme: 'dark' }}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Time (optional)</label>
+              <input
+                type="time"
+                value={time}
+                onChange={(e) => setTime(e.target.value)}
+                style={{ ...inputStyle, colorScheme: 'dark' }}
+              />
+            </div>
           </div>
 
           <div>

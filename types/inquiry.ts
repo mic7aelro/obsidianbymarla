@@ -29,6 +29,7 @@ export interface InquiryEvent {
   service: string
   location?: string
   date?: Date
+  time?: string
   depositPaid: boolean
   invoiceSentAt?: Date
   status: EventStatus

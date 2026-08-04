@@ -19,27 +19,24 @@ export default function ServicesPage() {
       </header>
 
       <div className="split-page__content services-panel">
-        <p className="services-scroll-cue" aria-hidden="true">
-          More services <span>↓</span>
-        </p>
         {services.map(category => (
           <section className="service-category" key={category.title}>
             <h2 className="service-category__title">{category.title}</h2>
             <div className="service-packages">
               {category.packages.map(pkg => (
-                <div className="service-package" key={pkg.name}>
+                <Link
+                  className="service-package"
+                  href={`/contact?service=${encodeURIComponent(pkg.inquiryLabel)}`}
+                  aria-label={`Inquire about ${pkg.name}`}
+                  key={pkg.name}
+                >
                   <div>
                     <h3 className="service-package__name">{pkg.name}</h3>
                     <p className="service-package__details">{pkg.details}</p>
                   </div>
                   <p className="service-package__price">{pkg.price}</p>
-                </div>
+                </Link>
               ))}
-            </div>
-            <div className="service-category__cta">
-              <Link className="text-link" href={`/contact?service=${encodeURIComponent(category.title)}`}>
-                Send an inquiry
-              </Link>
             </div>
           </section>
         ))}

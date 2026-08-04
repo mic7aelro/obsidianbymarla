@@ -2,26 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { serviceInquiryOptions } from '@/data/services'
 
-const SERVICES = [
-  'Wedding Photography - Engagement ($350)',
-  'Wedding Photography - Elopement ($900)',
-  'Wedding Photography - Full Day (from $2,500)',
-  'Personal Styling ($150/hr)',
-  'Brand Styling (from $500)',
-  'Personal Portraits ($250)',
-  'Headshots ($150)',
-  'Commercial Photography (from $500)',
-  'Personal Shopping (10%)',
-  'Custom / Other',
-]
-
-const CATEGORY_TO_SERVICE: Record<string, string> = {
-  'Wedding Photography': 'Wedding Photography - Engagement ($350)',
-  Styling: 'Personal Styling ($150/hr)',
-  Photography: 'Personal Portraits ($250)',
-  'Personal Shopping': 'Personal Shopping (10%)',
-}
+const SERVICES = [...serviceInquiryOptions, 'Custom / Other']
 
 export default function ContactForm() {
   const searchParams = useSearchParams()
@@ -36,9 +19,9 @@ export default function ContactForm() {
   })
 
   useEffect(() => {
-    const category = searchParams.get('service')
-    if (category && CATEGORY_TO_SERVICE[category]) {
-      setForm(previous => ({ ...previous, service: CATEGORY_TO_SERVICE[category] }))
+    const requestedService = searchParams.get('service')
+    if (requestedService && SERVICES.includes(requestedService)) {
+      setForm(previous => ({ ...previous, service: requestedService }))
     }
   }, [searchParams])
 

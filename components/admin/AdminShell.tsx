@@ -3,8 +3,9 @@
 import { useState, useCallback } from 'react'
 import InquiriesTab from './InquiriesTab'
 import EventsTab from './EventsTab'
+import CalendarTab from './CalendarTab'
 
-type Tab = 'inquiries' | 'events'
+type Tab = 'inquiries' | 'events' | 'calendar'
 
 const tabStyle = (active: boolean): React.CSSProperties => ({
   background: 'transparent',
@@ -107,12 +108,16 @@ export default function AdminShell() {
         <button style={tabStyle(tab === 'events')} onClick={() => setTab('events')}>
           Events
         </button>
+        <button style={tabStyle(tab === 'calendar')} onClick={() => setTab('calendar')}>
+          Calendar
+        </button>
       </div>
 
       {/* Content */}
       <main style={{ padding: '40px' }}>
         {tab === 'inquiries' && <InquiriesTab onEventCreated={goToEvents} />}
         {tab === 'events' && <EventsTab />}
+        {tab === 'calendar' && <CalendarTab />}
       </main>
     </div>
   )
