@@ -11,6 +11,9 @@ gsap.registerPlugin(ScrollTrigger)
 
 export default function ProjectCard({ project, index }: { project: Project; index: number }) {
   const cardRef = useRef<HTMLElement>(null)
+  const imageSrc = project.imageVersion
+    ? `${project.image}${project.image.includes('?') ? '&' : '?'}v=${project.imageVersion}`
+    : project.image
 
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -39,10 +42,10 @@ export default function ProjectCard({ project, index }: { project: Project; inde
         <div className="project-card__media">
           <Image
             className="project-card__image"
-            src={project.image}
+            src={imageSrc}
             alt={project.coverAlt}
             fill
-            sizes="(max-width: 640px) 100vw, 50vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1100px) 50vw, 33vw"
           />
         </div>
         <div className="project-meta">

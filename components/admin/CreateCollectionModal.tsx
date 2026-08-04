@@ -3,6 +3,27 @@
 import { useState, useRef, useCallback } from 'react'
 import { upload } from '@vercel/blob/client'
 
+const acceptedImageTypes = 'image/jpeg,image/png,image/webp,image/avif,image/gif,image/heic,image/heif,.heic,.heif'
+
+function isImageCandidate(file: File) {
+  return file.type.startsWith('image/') || /\.(heic|heif)$/i.test(file.name)
+}
+
+async function normalizeImage(file: File): Promise<File> {
+  const looksLikeHeic = /\.(heic|heif)$/i.test(file.name) || /image\/(heic|heif)/i.test(file.type)
+  if (!looksLikeHeic) return file
+
+  const { heicTo, isHeic } = await import('heic-to/csp')
+  if (!(await isHeic(file))) return file
+
+  const jpeg = await heicTo({ blob: file, type: 'image/jpeg', quality: 0.92 })
+  const name = file.name.replace(/\.(heic|heif)$/i, '') || 'photo'
+  return new File([jpeg], `${name}.jpg`, {
+    type: 'image/jpeg',
+    lastModified: file.lastModified,
+  })
+}
+
 const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
   fontSize: '9px',
@@ -35,20 +56,47 @@ export default function CreateCollectionModal({ onClose, onCreated }: Props) {
   const [thumbnailName, setThumbnailName] = useState('')
   const [dragging, setDragging] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [converting, setConverting] = useState(false)
+  const [conversionStatus, setConversionStatus] = useState('')
   const [error, setError] = useState('')
   const [uploadStatus, setUploadStatus] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
   const dropRef = useRef<HTMLDivElement>(null)
 
-  const addFiles = (incoming: FileList | File[]) => {
-    const arr = Array.from(incoming).filter(f => f.type.startsWith('image/'))
-    setFiles(prev => {
-      const existing = new Set(prev.map(f => f.name))
-      const next = [...prev, ...arr.filter(f => !existing.has(f.name))]
-      setThumbnailName(current => current || next[0]?.name || '')
-      return next
-    })
-  }
+  const addFiles = useCallback(async (incoming: FileList | File[]) => {
+    const candidates = Array.from(incoming).filter(isImageCandidate)
+    if (candidates.length === 0) return
+
+    setError('')
+    setConverting(true)
+    try {
+      const normalized: File[] = []
+      for (let index = 0; index < candidates.length; index++) {
+        const file = candidates[index]
+        if (/\.(heic|heif)$/i.test(file.name) || /image\/(heic|heif)/i.test(file.type)) {
+          setConversionStatus(`Converting ${index + 1} of ${candidates.length}`)
+        }
+        normalized.push(await normalizeImage(file))
+      }
+
+      setFiles(previous => {
+        const existing = new Set(previous.map(file => file.name.toLowerCase()))
+        const next = [
+          ...previous,
+          ...normalized.filter(file => !existing.has(file.name.toLowerCase())),
+        ]
+        setThumbnailName(current => current || next[0]?.name || '')
+        return next
+      })
+    } catch (conversionError) {
+      setError(conversionError instanceof Error
+        ? `Could not convert this HEIC image: ${conversionError.message}`
+        : 'Could not convert this HEIC image.')
+    } finally {
+      setConverting(false)
+      setConversionStatus('')
+    }
+  }, [])
 
   function slugify(value: string) {
     return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
@@ -84,7 +132,7 @@ export default function CreateCollectionModal({ onClose, onCreated }: Props) {
               for (const e of entries) {
                 if (e.isFile) {
                   (e as FileSystemFileEntry).file(f => {
-                    if (f.type.startsWith('image/')) imageFiles.push(f)
+                    if (isImageCandidate(f)) imageFiles.push(f)
                   })
                 }
               }
@@ -94,17 +142,17 @@ export default function CreateCollectionModal({ onClose, onCreated }: Props) {
         } else if (entry?.isFile) {
           promises.push(new Promise(res => {
             (entry as FileSystemFileEntry).file(f => {
-              if (f.type.startsWith('image/')) imageFiles.push(f)
+              if (isImageCandidate(f)) imageFiles.push(f)
               res()
             })
           }))
         }
       }
-      Promise.all(promises).then(() => addFiles(imageFiles))
+      Promise.all(promises).then(() => void addFiles(imageFiles))
     } else {
-      addFiles(e.dataTransfer.files)
+      void addFiles(e.dataTransfer.files)
     }
-  }, [])
+  }, [addFiles])
 
   async function submit() {
     if (!title.trim() || !category.trim() || files.length === 0) {
@@ -231,10 +279,15 @@ export default function CreateCollectionModal({ onClose, onCreated }: Props) {
                 transition: 'all 0.15s',
               }}
             >
-              {files.length === 0 ? (
+              {converting ? (
+                <>
+                  <p style={{ ...labelStyle, color: 'rgba(255,255,255,0.82)', marginBottom: '6px' }}>{conversionStatus || 'Preparing images'}</p>
+                  <p style={{ ...labelStyle, fontSize: '8px', opacity: 0.28, color: '#fff' }}>HEIC is converted to a high-quality JPEG on this device</p>
+                </>
+              ) : files.length === 0 ? (
                 <>
                   <p style={{ ...labelStyle, opacity: 0.35, color: '#fff', marginBottom: '6px' }}>Drop a folder or images here</p>
-                  <p style={{ ...labelStyle, fontSize: '8px', opacity: 0.2, color: '#fff' }}>or click to browse</p>
+                  <p style={{ ...labelStyle, fontSize: '8px', opacity: 0.2, color: '#fff' }}>JPEG, PNG, WebP, HEIC or HEIF</p>
                 </>
               ) : (
                 <>
@@ -247,9 +300,12 @@ export default function CreateCollectionModal({ onClose, onCreated }: Props) {
               ref={fileInputRef}
               type="file"
               multiple
-              accept="image/*"
+              accept={acceptedImageTypes}
               style={{ display: 'none' }}
-              onChange={e => e.target.files && addFiles(e.target.files)}
+              onChange={e => {
+                if (e.target.files) void addFiles(e.target.files)
+                e.target.value = ''
+              }}
             />
           </div>
 
@@ -288,8 +344,8 @@ export default function CreateCollectionModal({ onClose, onCreated }: Props) {
           <button onClick={onClose} style={{ ...labelStyle, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', padding: '9px 18px', cursor: 'pointer' }}>
             Cancel
           </button>
-          <button onClick={submit} disabled={uploading} style={{ ...labelStyle, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '9px 20px', cursor: uploading ? 'default' : 'pointer', opacity: uploading ? 0.5 : 1 }}>
-            {uploading ? uploadStatus || `Uploading ${files.length} images…` : 'Create Collection'}
+          <button onClick={submit} disabled={uploading || converting} style={{ ...labelStyle, background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', padding: '9px 20px', cursor: uploading || converting ? 'default' : 'pointer', opacity: uploading || converting ? 0.5 : 1 }}>
+            {converting ? 'Preparing images…' : uploading ? uploadStatus || `Uploading ${files.length} images…` : 'Create Collection'}
           </button>
         </div>
       </div>

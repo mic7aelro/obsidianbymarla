@@ -10,6 +10,7 @@ export interface Project {
   year: number
   category: string
   image: string
+  imageVersion?: number
   coverAlt: string
   images?: ProjectImage[]
 }

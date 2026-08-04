@@ -28,8 +28,8 @@ export async function POST(request: Request) {
         return {
           allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'],
           maximumSizeInBytes: 30 * 1024 * 1024,
-          addRandomSuffix: false,
-          allowOverwrite: true,
+          addRandomSuffix: true,
+          allowOverwrite: false,
           cacheControlMaxAge: 60 * 60 * 24 * 365,
         }
       },

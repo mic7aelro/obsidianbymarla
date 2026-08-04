@@ -133,6 +133,7 @@ interface CollectionCuration {
   slug: string
   imageOrder?: string[]
   coverImage?: string
+  updatedAt?: Date
 }
 
 async function getCollectionCuration(): Promise<Map<string, CollectionCuration>> {
@@ -155,11 +156,16 @@ function applyCuration(project: Project, curation?: CollectionCuration): Project
   const included = new Set(ordered.map(image => image.src))
   const remaining = project.images?.filter(image => !included.has(image.src)) ?? []
 
+  const hasCuratedCover = Boolean(curation.coverImage && imagesBySrc.has(curation.coverImage))
+
   return {
     ...project,
-    image: curation.coverImage && imagesBySrc.has(curation.coverImage)
-      ? curation.coverImage
+    image: hasCuratedCover
+      ? curation.coverImage!
       : project.image,
+    imageVersion: hasCuratedCover && curation.updatedAt
+      ? curation.updatedAt.getTime()
+      : project.imageVersion,
     images: [...ordered, ...remaining],
   }
 }
