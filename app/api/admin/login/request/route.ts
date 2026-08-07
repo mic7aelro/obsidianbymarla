@@ -39,10 +39,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'That email is not authorized.' }, { status: 403 })
   }
 
+  // Deliver Marla's vanity-address OTP directly to the configured inbox. This
+  // keeps her login address stable without depending on an external forwarding
+  // rule for time-sensitive sign-in codes.
+  const recipient = email === 'marla@obsidianbymarla.com' && process.env.MARLA_EMAIL
+    ? process.env.MARLA_EMAIL
+    : email
+
   const resend = new Resend(apiKey)
   const { error } = await resend.emails.send({
     from,
-    to: email,
+    to: recipient,
     subject: `Your admin sign-in code: ${result.code}`,
     html: adminOtpHtml(result.code),
     text: adminOtpText(result.code),
