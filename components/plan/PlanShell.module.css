@@ -285,38 +285,13 @@
 .selectDraft {
   background: transparent;
   border: 0;
-  cursor: pointer;
+  cursor: grab;
   inset: 0;
   position: absolute;
 }
 
-.moveHandle,
-.draftBadge {
-  background: rgba(5, 5, 5, 0.78);
-  color: #f2f0ec;
-  font-family: var(--font-sans);
-  font-size: 0.45rem;
-  letter-spacing: 0.18em;
-  line-height: 1;
-  padding: 0.48rem 0.55rem;
-  position: absolute;
-  text-transform: uppercase;
-}
-
-.moveHandle {
-  border: 1px solid rgba(242, 240, 236, 0.28);
-  cursor: grab;
-  left: 0.55rem;
-  top: 0.55rem;
-}
-
-.moveHandle:active {
+.selectDraft:active {
   cursor: grabbing;
-}
-
-.draftBadge {
-  bottom: 0.55rem;
-  right: 0.55rem;
 }
 
 .publishedBadge {
@@ -330,6 +305,12 @@
   right: 0.55rem;
   top: 0.55rem;
   width: 2rem;
+}
+
+.publishedCell {
+  border: 0;
+  cursor: zoom-in;
+  padding: 0;
 }
 
 .publishedCell .media {
@@ -557,6 +538,81 @@
   margin-top: 1rem;
 }
 
+.lightbox {
+  align-items: center;
+  background: rgba(5, 5, 5, 0.97);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  inset: 0;
+  justify-content: center;
+  overscroll-behavior: contain;
+  padding: max(4.5rem, env(safe-area-inset-top)) max(1.5rem, env(safe-area-inset-right)) max(1.5rem, env(safe-area-inset-bottom)) max(1.5rem, env(safe-area-inset-left));
+  position: fixed;
+  z-index: 80;
+}
+
+.lightboxClose {
+  align-items: center;
+  background: rgba(20, 20, 20, 0.88);
+  border: 1px solid rgba(242, 240, 236, 0.24);
+  color: #f2f0ec;
+  cursor: pointer;
+  display: flex;
+  height: 48px;
+  justify-content: center;
+  position: absolute;
+  right: max(1.25rem, env(safe-area-inset-right));
+  top: max(1.25rem, env(safe-area-inset-top));
+  transition: background 250ms var(--ease-out-expo), border-color 250ms var(--ease-out-expo), transform 250ms var(--ease-out-expo);
+  width: 48px;
+}
+
+.lightboxClose:hover {
+  background: rgba(36, 36, 36, 0.96);
+  border-color: rgba(242, 240, 236, 0.58);
+}
+
+.lightboxClose:active {
+  transform: scale(0.96);
+}
+
+.lightboxClose:focus-visible {
+  outline: 2px solid #f2f0ec;
+  outline-offset: 3px;
+}
+
+.lightboxMedia {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  max-height: calc(100dvh - 8.5rem);
+  max-width: min(94vw, 1600px);
+  min-height: 0;
+  min-width: 0;
+}
+
+.lightboxAsset {
+  display: block;
+  height: auto;
+  max-height: calc(100dvh - 8.5rem);
+  max-width: min(94vw, 1600px);
+  object-fit: contain;
+  width: auto;
+}
+
+.lightboxMeta {
+  color: rgba(242, 240, 236, 0.54);
+  display: flex;
+  font-family: var(--font-sans);
+  font-size: 0.54rem;
+  justify-content: space-between;
+  letter-spacing: 0.18em;
+  max-width: min(94vw, 1600px);
+  text-transform: uppercase;
+  width: 100%;
+}
+
 @media (max-width: 1180px) {
   .workspace {
     grid-template-columns: minmax(12rem, 0.7fr) minmax(30rem, 2fr);
@@ -649,28 +705,33 @@
     flex-direction: column;
   }
 
-  .moveHandle,
-  .draftBadge {
-    font-size: 0.38rem;
-    letter-spacing: 0.12em;
-    padding: 0.38rem 0.4rem;
-  }
-
-  .moveHandle {
-    left: 0.35rem;
-    top: 0.35rem;
-  }
-
-  .draftBadge {
-    bottom: 0.35rem;
-    right: 0.35rem;
-  }
-
   .publishedBadge {
     height: 1.65rem;
     right: 0.35rem;
     top: 0.35rem;
     width: 1.65rem;
+  }
+
+  .lightbox {
+    gap: 0.75rem;
+    padding: max(4.5rem, calc(env(safe-area-inset-top) + 3.5rem)) max(0.75rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
+  }
+
+  .lightboxClose {
+    height: 44px;
+    right: max(0.75rem, env(safe-area-inset-right));
+    top: max(0.75rem, env(safe-area-inset-top));
+    width: 44px;
+  }
+
+  .lightboxMedia,
+  .lightboxAsset {
+    max-height: calc(100dvh - 7.5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    max-width: calc(100vw - 1.5rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+  }
+
+  .lightboxMeta {
+    max-width: calc(100vw - 1.5rem - env(safe-area-inset-left) - env(safe-area-inset-right));
   }
 
 }
@@ -688,6 +749,7 @@
 @media (prefers-reduced-motion: reduce) {
   .editorPanel,
   .publishedCell .media,
+  .lightboxClose,
   .primaryButton,
   .secondaryButton,
   .deleteButton {

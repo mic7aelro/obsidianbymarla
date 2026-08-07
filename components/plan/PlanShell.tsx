@@ -3,13 +3,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { uploadPresigned } from '@vercel/blob/client'
-import { InstagramLogo } from '@phosphor-icons/react'
+import { InstagramLogo, X } from '@phosphor-icons/react'
 import {
   closestCenter,
   DndContext,
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   type DragEndEvent,
@@ -99,11 +100,14 @@ export default function PlanShell() {
   const [savingCaption, setSavingCaption] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
+  const [previewMedia, setPreviewMedia] = useState<InstagramMedia | null>(null)
   const [reducedMotion, setReducedMotion] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const previewTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
@@ -112,6 +116,11 @@ export default function PlanShell() {
     [drafts, selectedId],
   )
   const activeDraft = drafts.find(draft => draft.id === activeId) ?? null
+
+  const closePreview = useCallback(() => {
+    setPreviewMedia(null)
+    window.requestAnimationFrame(() => previewTriggerRef.current?.focus())
+  }, [])
 
   useEffect(() => {
     const query = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -124,6 +133,22 @@ export default function PlanShell() {
   useEffect(() => {
     setCaption(selectedDraft?.caption ?? '')
   }, [selectedDraft])
+
+  useEffect(() => {
+    if (!previewMedia) return
+
+    const previousOverflow = document.body.style.overflow
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closePreview()
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [closePreview, previewMedia])
 
   const handleUnauthorized = useCallback((response: Response) => {
     if (response.status !== 401) return false
@@ -465,20 +490,21 @@ export default function PlanShell() {
                       draft={draft}
                       index={index}
                       selected={draft.id === selectedId}
-                      nextToPost={index === drafts.length - 1}
                       reducedMotion={reducedMotion}
                       onSelect={() => setSelectedId(current => current === draft.id ? null : draft.id)}
                     />
                   ))}
 
                   {feed.map(item => (
-                    <a
+                    <button
                       key={item.id}
-                      href={item.permalink}
-                      target="_blank"
-                      rel="noreferrer"
+                      type="button"
                       className={`${styles.gridCell} ${styles.publishedCell}`}
-                      aria-label={`Open Instagram post from ${formatDate(item.timestamp)}`}
+                      aria-label={`View Instagram post from ${formatDate(item.timestamp)} fullscreen`}
+                      onClick={event => {
+                        previewTriggerRef.current = event.currentTarget
+                        setPreviewMedia(item)
+                      }}
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
@@ -490,7 +516,7 @@ export default function PlanShell() {
                       <span className={styles.publishedBadge} aria-hidden="true">
                         <InstagramLogo size={18} weight="regular" />
                       </span>
-                    </a>
+                    </button>
                   ))}
                 </div>
               </SortableContext>
@@ -562,6 +588,54 @@ export default function PlanShell() {
           )}
         </aside>
       </div>
+
+      {previewMedia && (
+        <div
+          className={styles.lightbox}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Instagram post from ${formatDate(previewMedia.timestamp)}`}
+          onMouseDown={event => {
+            if (event.target === event.currentTarget) closePreview()
+          }}
+        >
+          <button
+            type="button"
+            className={styles.lightboxClose}
+            aria-label="Close fullscreen image"
+            onClick={closePreview}
+            autoFocus
+          >
+            <X size={24} weight="regular" />
+          </button>
+
+          <div className={styles.lightboxMedia}>
+            {previewMedia.mediaType === 'VIDEO' ? (
+              <video
+                src={previewMedia.mediaUrl}
+                poster={previewMedia.thumbnailUrl ?? undefined}
+                controls
+                playsInline
+                preload="metadata"
+                className={styles.lightboxAsset}
+              />
+            ) : (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={previewMedia.mediaUrl}
+                alt={previewMedia.caption || `Instagram post from ${formatDate(previewMedia.timestamp)}`}
+                className={styles.lightboxAsset}
+                decoding="async"
+              />
+            )}
+          </div>
+
+          <div className={styles.lightboxMeta}>
+            <span>{instagramUsername ? `@${instagramUsername}` : '@marlizzlle'}</span>
+            <span>{formatDate(previewMedia.timestamp)}</span>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

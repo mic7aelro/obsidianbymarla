@@ -9,7 +9,6 @@ interface PlanDraftCardProps {
   draft: PlanDraft
   index: number
   selected: boolean
-  nextToPost: boolean
   reducedMotion: boolean
   onSelect: () => void
 }
@@ -18,7 +17,6 @@ export default function PlanDraftCard({
   draft,
   index,
   selected,
-  nextToPost,
   reducedMotion,
   onSelect,
 }: PlanDraftCardProps) {
@@ -54,25 +52,14 @@ export default function PlanDraftCard({
       />
 
       <button
-        type="button"
-        className={styles.selectDraft}
-        aria-label={`Edit planned post ${index + 1}`}
-        aria-pressed={selected}
-        onClick={onSelect}
-      />
-
-      <button
         ref={setActivatorNodeRef}
         type="button"
-        className={styles.moveHandle}
-        aria-label={`Move planned post ${index + 1}. Press and hold, then drag.`}
+        className={styles.selectDraft}
+        aria-label={`Edit or move planned post ${index + 1}`}
+        onClick={onSelect}
         {...attributes}
         {...listeners}
-      >
-        Move
-      </button>
-
-      <span className={styles.draftBadge}>{nextToPost ? 'Next up' : 'Planned'}</span>
+      />
     </article>
   )
 }
