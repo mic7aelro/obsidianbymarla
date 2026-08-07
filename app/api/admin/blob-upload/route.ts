@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       body,
       request,
       onBeforeGenerateToken: async pathname => {
-        if (!pathname.startsWith('images/projects/')) {
+        if (!pathname.startsWith('images/projects/') && !pathname.startsWith('images/plan/')) {
           throw new Error('Invalid upload path')
         }
         return {

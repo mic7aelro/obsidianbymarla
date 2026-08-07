@@ -63,23 +63,42 @@ export default function AdminShell() {
           Obsidian By Marla — Admin
         </a>
 
-        <a
-          href="/admin/curate"
-          style={{
-            background: 'transparent',
-            border: '1px solid rgba(255,255,255,0.15)',
-            color: 'rgba(255,255,255,0.5)',
-            fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
-            fontSize: '9px',
-            letterSpacing: '0.3em',
-            textTransform: 'uppercase',
-            cursor: 'pointer',
-            padding: '8px 16px',
-            textDecoration: 'none',
-          }}
-        >
-          Curate Gallery
-        </a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <a
+            href="/admin/curate"
+            style={{
+              background: 'transparent',
+              border: '1px solid rgba(255,255,255,0.15)',
+              color: 'rgba(255,255,255,0.5)',
+              fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
+              fontSize: '9px',
+              letterSpacing: '0.3em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              padding: '8px 16px',
+              textDecoration: 'none',
+            }}
+          >
+            Curate Gallery
+          </a>
+          <a
+            href="/plan"
+            style={{
+              background: '#f2f0ec',
+              border: '1px solid #f2f0ec',
+              color: '#111',
+              fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
+              fontSize: '9px',
+              letterSpacing: '0.3em',
+              textTransform: 'uppercase',
+              cursor: 'pointer',
+              padding: '8px 16px',
+              textDecoration: 'none',
+            }}
+          >
+            Plan Feed
+          </a>
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', justifyContent: 'flex-end' }}>
           <button

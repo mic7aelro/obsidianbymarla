@@ -22,6 +22,19 @@ export async function middleware(req: NextRequest) {
     // Pass API routes through unchanged
     if (pathname.startsWith('/api/')) return NextResponse.next()
 
+    // Keep the planner at /plan on both the main site and admin subdomain.
+    if (pathname === '/plan' || pathname.startsWith('/plan/')) {
+      const res = NextResponse.next()
+      const session = await getIronSession<SessionData>(req, res, sessionOptions)
+      if (!session.isLoggedIn) {
+        const loginUrl = req.nextUrl.clone()
+        loginUrl.pathname = '/login'
+        loginUrl.searchParams.set('next', pathname)
+        return NextResponse.redirect(loginUrl)
+      }
+      return res
+    }
+
     // Strip leading /admin if already present to avoid double-prefixing
     const stripped = pathname.replace(/^\/admin/, '') || '/'
     const adminPath = stripped === '/' ? '/admin/home' : `/admin${stripped}`
@@ -49,6 +62,17 @@ export async function middleware(req: NextRequest) {
     const session = await getIronSession<SessionData>(req, res, sessionOptions)
     if (!session.isLoggedIn) {
       return NextResponse.redirect(new URL('/admin/login', req.url))
+    }
+  }
+
+  // The feed planner shares Marla's existing email OTP session.
+  if (pathname === '/plan' || pathname.startsWith('/plan/')) {
+    const res = NextResponse.next()
+    const session = await getIronSession<SessionData>(req, res, sessionOptions)
+    if (!session.isLoggedIn) {
+      const loginUrl = new URL('/admin/login', req.url)
+      loginUrl.searchParams.set('next', pathname)
+      return NextResponse.redirect(loginUrl)
     }
   }
 

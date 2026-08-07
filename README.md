@@ -34,3 +34,24 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Instagram feed planner
+
+The private planner is available at `/plan` and uses the same email OTP session as `/admin`.
+It stores planned images and captions in MongoDB, stores uploads in Vercel Blob, and reads Marla's
+published feed from the Instagram API.
+
+Add these values to `.env.local` to connect the published feed:
+
+```bash
+INSTAGRAM_ACCESS_TOKEN=
+INSTAGRAM_USER_ID=
+INSTAGRAM_USERNAME=marlizzlle
+INSTAGRAM_API_VERSION=v25.0
+# Optional. Use https://graph.facebook.com for a Facebook Login token.
+INSTAGRAM_GRAPH_BASE_URL=https://graph.instagram.com
+```
+
+The token needs access to Marla's professional Instagram account and the
+`instagram_business_basic` permission. The access token is only used by the server-side route and
+is never sent to the browser.

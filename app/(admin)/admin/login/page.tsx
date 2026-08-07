@@ -92,7 +92,11 @@ export default function AdminLoginPage() {
       }
 
       const adminHost = window.location.hostname.startsWith('admin.')
-      window.location.assign(adminHost ? '/home' : '/admin/home')
+      const requestedPath = new URLSearchParams(window.location.search).get('next')
+      const safePath = requestedPath === '/plan' || requestedPath?.startsWith('/admin/')
+        ? requestedPath
+        : null
+      window.location.assign(safePath ?? (adminHost ? '/home' : '/admin/home'))
     } catch {
       setError('The code could not be verified.')
     } finally {

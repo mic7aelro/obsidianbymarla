@@ -948,11 +948,14 @@ body:has(.contact-page) .site-footer {
 }
 
 body:has(.admin-route) .site-nav,
-body:has(.admin-route) .site-footer {
+body:has(.admin-route) .site-footer,
+body:has(.plan-route) .site-nav,
+body:has(.plan-route) .site-footer {
   display: none;
 }
 
-.admin-route {
+.admin-route,
+.plan-route {
   min-height: 100dvh;
 }
 
