@@ -136,6 +136,21 @@ interface CollectionCuration {
   updatedAt?: Date
 }
 
+interface CollectionOrder {
+  key: string
+  slugs?: string[]
+}
+
+async function getCollectionOrder(): Promise<string[]> {
+  try {
+    const client = await clientPromise
+    const doc = await client.db('marla').collection<CollectionOrder>('collection_order').findOne({ key: 'gallery-order' })
+    return doc?.slugs?.filter(slug => typeof slug === 'string') ?? []
+  } catch {
+    return []
+  }
+}
+
 async function getCollectionCuration(): Promise<Map<string, CollectionCuration>> {
   try {
     const client = await clientPromise
@@ -171,10 +186,21 @@ function applyCuration(project: Project, curation?: CollectionCuration): Project
 }
 
 export async function getCuratableProjects(): Promise<Project[]> {
-  const [dynamic, curation] = await Promise.all([getDynamicCollections(), getCollectionCuration()])
+  const [dynamic, curation, savedOrder] = await Promise.all([
+    getDynamicCollections(),
+    getCollectionCuration(),
+    getCollectionOrder(),
+  ])
   const seen = new Set(rawProjects.map(project => project.slug))
   const uniqueDynamic = dynamic.filter(project => !seen.has(project.slug))
-  return [...rawProjects, ...uniqueDynamic].map(project => applyCuration(project, curation.get(project.slug)))
+  const curated = [...rawProjects, ...uniqueDynamic].map(project => applyCuration(project, curation.get(project.slug)))
+  const bySlug = new Map(curated.map(project => [project.slug, project]))
+  const ordered = savedOrder
+    .map(slug => bySlug.get(slug))
+    .filter((project): project is Project => Boolean(project))
+  const included = new Set(ordered.map(project => project.slug))
+
+  return [...ordered, ...curated.filter(project => !included.has(project.slug))]
 }
 
 export async function getProjects(): Promise<Project[]> {

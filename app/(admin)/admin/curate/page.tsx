@@ -2,6 +2,8 @@ import CurateShell from '@/components/admin/CurateShell'
 import { getCuratableProjects } from '@/data/projects'
 import clientPromise from '@/lib/mongodb'
 
+export const dynamic = 'force-dynamic'
+
 async function getHidden(): Promise<string[]> {
   try {
     const client = await clientPromise

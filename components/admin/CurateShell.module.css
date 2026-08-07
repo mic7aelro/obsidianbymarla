@@ -43,8 +43,110 @@
   position: absolute;
   top: calc(100% + 8px);
   transform: translateX(-50%);
-  width: max-content;
+  width: min(34rem, calc(100vw - 2rem));
   z-index: 100;
+}
+
+.collectionsHint {
+  border-bottom: 1px solid #1a1a1a;
+  color: rgba(240, 239, 236, 0.32);
+  font-family: var(--font-sans, sans-serif);
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0.8rem 1rem;
+  text-transform: uppercase;
+}
+
+.collectionList {
+  display: flex;
+  flex-direction: column;
+}
+
+.collectionRow {
+  align-items: center;
+  border-bottom: 1px solid #1a1a1a;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  padding: 0.55rem 0.75rem;
+  transition: background-color 180ms ease, opacity 180ms ease;
+}
+
+.collectionRow:last-child {
+  border-bottom: 0;
+}
+
+.collectionRowActive {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.collectionRowDragging {
+  background: #171717;
+  opacity: 0.68;
+  position: relative;
+  z-index: 2;
+}
+
+.collectionMove,
+.collectionTitle,
+.collectionVisibility {
+  font-family: var(--font-sans, sans-serif);
+  text-transform: uppercase;
+}
+
+.collectionMove {
+  align-items: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(240, 239, 236, 0.46);
+  cursor: grab;
+  display: flex;
+  height: 34px;
+  justify-content: center;
+  touch-action: none;
+  width: 34px;
+}
+
+.collectionMove:active {
+  cursor: grabbing;
+}
+
+.collectionTitle {
+  background: transparent;
+  border: 0;
+  color: rgba(240, 239, 236, 0.66);
+  cursor: pointer;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0.65rem 0;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.collectionRowActive .collectionTitle {
+  color: #f0efec;
+}
+
+.collectionVisibility {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(240, 239, 236, 0.42);
+  cursor: pointer;
+  font-size: 7px;
+  letter-spacing: 0.16em;
+  padding: 0.45rem 0.55rem;
+  white-space: nowrap;
+}
+
+.collectionVisibilityHidden {
+  border-color: rgba(255, 100, 100, 0.4);
+  color: rgba(255, 100, 100, 0.8);
 }
 
 .actions {

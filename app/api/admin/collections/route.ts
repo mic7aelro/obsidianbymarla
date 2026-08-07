@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
+import { revalidatePath } from 'next/cache'
 import clientPromise from '@/lib/mongodb'
 
 async function requireAuth() {
@@ -34,7 +35,23 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   if (!(await requireAuth())) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { slug, disabled } = await req.json()
+  const { slug, disabled, order } = await req.json()
+
+  if (order !== undefined) {
+    if (!Array.isArray(order) || order.some(item => typeof item !== 'string') || new Set(order).size !== order.length) {
+      return NextResponse.json({ error: 'Invalid gallery order' }, { status: 400 })
+    }
+    const client = await clientPromise
+    await client.db('marla').collection('collection_order').updateOne(
+      { key: 'gallery-order' },
+      { $set: { key: 'gallery-order', slugs: order, updatedAt: new Date() } },
+      { upsert: true }
+    )
+    revalidatePath('/work')
+    revalidatePath('/admin/curate')
+    return NextResponse.json({ ok: true })
+  }
+
   if (!slug) return NextResponse.json({ error: 'Missing slug' }, { status: 400 })
   const col = await getDisabledCol()
   if (disabled) {
@@ -42,6 +59,8 @@ export async function PATCH(req: Request) {
   } else {
     await col.deleteOne({ slug })
   }
+  revalidatePath('/work')
+  revalidatePath('/admin/curate')
   return NextResponse.json({ ok: true })
 }
 
@@ -84,5 +103,8 @@ export async function POST(req: Request) {
     { $set: { slug, imageOrder: images.map((image: { src: string }) => image.src), coverImage, updatedAt: new Date() } },
     { upsert: true }
   )
+  revalidatePath('/work')
+  revalidatePath(`/work/${slug}`)
+  revalidatePath('/admin/curate')
   return NextResponse.json({ ok: true, slug })
 }

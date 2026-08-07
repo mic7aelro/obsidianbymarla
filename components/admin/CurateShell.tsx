@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
+import { DotsSixVertical } from '@phosphor-icons/react'
 import {
   closestCenter,
   DndContext,
@@ -17,7 +18,10 @@ import {
   rectSortingStrategy,
   SortableContext,
   sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import CreateCollectionModal from './CreateCollectionModal'
 import SortableImageCard from './SortableImageCard'
 import BlobUsageMeter from './BlobUsageMeter'
@@ -38,6 +42,14 @@ interface Gallery {
   images: CurateImage[]
 }
 
+interface SortableCollectionRowProps {
+  gallery: Gallery
+  active: boolean
+  disabled: boolean
+  onSelect: () => void
+  onToggleDisabled: () => void
+}
+
 const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
   fontSize: '9px',
@@ -45,8 +57,56 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase',
 }
 
+function SortableCollectionRow({
+  gallery,
+  active,
+  disabled,
+  onSelect,
+  onToggleDisabled,
+}: SortableCollectionRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    setActivatorNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: gallery.slug })
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`${styles.collectionRow} ${active ? styles.collectionRowActive : ''} ${isDragging ? styles.collectionRowDragging : ''}`}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+    >
+      <button
+        ref={setActivatorNodeRef}
+        type="button"
+        className={styles.collectionMove}
+        aria-label={`Move ${gallery.title}. Press and hold, then drag to reorder.`}
+        {...attributes}
+        {...listeners}
+      >
+        <DotsSixVertical size={15} weight="bold" aria-hidden="true" />
+      </button>
+      <button type="button" onClick={onSelect} className={styles.collectionTitle}>
+        {gallery.title}
+      </button>
+      <button
+        type="button"
+        onClick={event => { event.stopPropagation(); onToggleDisabled() }}
+        className={`${styles.collectionVisibility} ${disabled ? styles.collectionVisibilityHidden : ''}`}
+      >
+        {disabled ? 'Hidden from /work' : 'Visible'}
+      </button>
+    </div>
+  )
+}
+
 export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
-  const [galleryIndex, setGalleryIndex] = useState(0)
+  const [activeGallerySlug, setActiveGallerySlug] = useState(galleries[0]?.slug ?? '')
+  const [galleryOrder, setGalleryOrder] = useState(() => galleries.map(gallery => gallery.slug))
   const [collectionsOpen, setCollectionsOpen] = useState(false)
   const [createOpen, setCreateOpen] = useState(false)
   const collectionsRef = useRef<HTMLDivElement>(null)
@@ -70,7 +130,13 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
     Object.fromEntries(galleries.map(gallery => [gallery.slug, gallery.images.map(image => image.src)]))
   )
 
-  const gallery = galleries[galleryIndex]
+  const orderedGalleries = useMemo(() => {
+    const bySlug = new Map(galleries.map(item => [item.slug, item]))
+    const ordered = galleryOrder.map(slug => bySlug.get(slug)).filter((item): item is Gallery => Boolean(item))
+    const included = new Set(ordered.map(item => item.slug))
+    return [...ordered, ...galleries.filter(item => !included.has(item.slug))]
+  }, [galleries, galleryOrder])
+  const gallery = orderedGalleries.find(item => item.slug === activeGallerySlug) ?? orderedGalleries[0]
   const imageLookup = new Map(gallery?.images.map(image => [image.src, image]) ?? [])
   const allImages = (orders[gallery?.slug] ?? []).map(src => imageLookup.get(src)).filter((image): image is CurateImage => Boolean(image))
   const coverImage = covers[gallery?.slug]
@@ -82,7 +148,7 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   )
 
-  useEffect(() => { setSelected(new Set()) }, [galleryIndex])
+  useEffect(() => { setSelected(new Set()) }, [gallery?.slug])
 
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -162,6 +228,33 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ slug, disabled: isNowDisabled }),
     })
+  }
+
+  async function saveGalleryOrder(order: string[]) {
+    const response = await fetch('/api/admin/collections', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order }),
+    })
+    if (!response.ok) throw new Error('Could not save gallery order')
+  }
+
+  function finishGalleryMove(event: DragEndEvent) {
+    if (!event.over || event.active.id === event.over.id) return
+    const current = orderedGalleries.map(item => item.slug)
+    const from = current.indexOf(String(event.active.id))
+    const to = current.indexOf(String(event.over.id))
+    if (from < 0 || to < 0) return
+    const next = arrayMove(current, from, to)
+    setGalleryOrder(next)
+    setSaving(true)
+    setSaveError('')
+    void saveGalleryOrder(next)
+      .catch(error => {
+        setGalleryOrder(current)
+        setSaveError(error instanceof Error ? error.message : 'Could not save gallery order')
+      })
+      .finally(() => setSaving(false))
   }
 
   async function saveCuration(slug: string, updates: { imageOrder?: string[]; coverImage?: string }) {
@@ -252,7 +345,7 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
           </span>
         </div>
 
-        {/* Collections dropdown — absolutely centered */}
+        {/* Collections dropdown, centered in the toolbar */}
         <div ref={collectionsRef} className={styles.collections}>
           <button
             onClick={() => setCreateOpen(true)}
@@ -270,36 +363,27 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
 
           {collectionsOpen && (
             <div className={styles.collectionsMenu}>
-              {galleries.map((g, i) => {
-                const isActive = i === galleryIndex
-                const isDisabled = disabled.has(g.slug)
-                return (
-                  <div key={g.slug} style={{
-                    padding: '10px 16px', borderBottom: '1px solid #1a1a1a',
-                    background: isActive ? 'rgba(255,255,255,0.03)' : 'transparent',
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px',
-                  }}>
-                    <button
-                      onClick={() => { setGalleryIndex(i); setSelected(new Set()); setCollectionsOpen(false) }}
-                      style={{ ...labelStyle, background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', opacity: isActive ? 1 : isDisabled ? 0.2 : 0.4, textAlign: 'left', padding: 0 }}
-                    >
-                      {g.title}
-                    </button>
-                    <button
-                      onClick={e => { e.stopPropagation(); toggleCollectionDisabled(g.slug) }}
-                      style={{
-                        ...labelStyle, fontSize: '8px',
-                        background: 'transparent',
-                        border: `1px solid ${isDisabled ? 'rgba(255,100,100,0.4)' : 'rgba(255,255,255,0.1)'}`,
-                        color: isDisabled ? 'rgba(255,100,100,0.8)' : 'rgba(255,255,255,0.3)',
-                        padding: '3px 8px', cursor: 'pointer', whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {isDisabled ? 'Hidden from /work' : 'Visible'}
-                    </button>
+              <p className={styles.collectionsHint}>Hold the grip and drag to set the order on /work</p>
+              <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={finishGalleryMove}>
+                <SortableContext items={orderedGalleries.map(item => item.slug)} strategy={verticalListSortingStrategy}>
+                  <div className={styles.collectionList}>
+                    {orderedGalleries.map(item => (
+                      <SortableCollectionRow
+                        key={item.slug}
+                        gallery={item}
+                        active={item.slug === gallery?.slug}
+                        disabled={disabled.has(item.slug)}
+                        onSelect={() => {
+                          setActiveGallerySlug(item.slug)
+                          setSelected(new Set())
+                          setCollectionsOpen(false)
+                        }}
+                        onToggleDisabled={() => void toggleCollectionDisabled(item.slug)}
+                      />
+                    ))}
                   </div>
-                )
-              })}
+                </SortableContext>
+              </DndContext>
             </div>
           )}
         </div>
@@ -327,7 +411,7 @@ export default function CurateShell({ galleries }: { galleries: Gallery[] }) {
           onClose={() => setCreateOpen(false)}
           onCreated={(slug, title) => {
             setCreateOpen(false)
-            // Reload the page so the new collection appears in the curate list
+            // Reload so the new collection appears immediately in the curated list.
             window.location.reload()
           }}
         />
