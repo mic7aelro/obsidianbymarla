@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { upload } from '@vercel/blob/client'
+import { uploadPresigned } from '@vercel/blob/client'
 
 const acceptedImageTypes = 'image/jpeg,image/png,image/webp,image/avif,image/gif,image/heic,image/heif,.heic,.heif'
 
@@ -170,7 +170,7 @@ export default function CreateCollectionModal({ onClose, onCreated }: Props) {
         const extension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
         setUploadStatus(`Uploading ${index + 1} of ${files.length}`)
         const [blob, dimensions] = await Promise.all([
-          upload(`images/projects/${slug}/${index + 1}.${extension}`, file, {
+          uploadPresigned(`images/projects/${slug}/${index + 1}.${extension}`, file, {
             access: 'public',
             handleUploadUrl: '/api/admin/blob-upload',
             multipart: file.size > 5 * 1024 * 1024,

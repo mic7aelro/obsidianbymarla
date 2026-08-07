@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { upload } from '@vercel/blob/client'
+import { uploadPresigned } from '@vercel/blob/client'
 import { InstagramLogo } from '@phosphor-icons/react'
 import {
   closestCenter,
@@ -198,7 +198,7 @@ export default function PlanShell() {
         const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
         setUploadStatus(`Uploading ${index + 1} of ${normalized.length}`)
         const [blob, dimensions] = await Promise.all([
-          upload(`images/plan/${Date.now()}-${index}.${extension}`, file, {
+          uploadPresigned(`images/plan/${Date.now()}-${index}.${extension}`, file, {
             access: 'public',
             handleUploadUrl: '/api/admin/blob-upload',
             multipart: file.size > 5 * 1024 * 1024,

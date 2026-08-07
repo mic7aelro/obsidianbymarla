@@ -1,4 +1,5 @@
-import { handleUpload, type HandleUploadBody } from '@vercel/blob/client'
+import { issueSignedToken } from '@vercel/blob'
+import { handleUploadPresigned, type HandleUploadPresignedBody } from '@vercel/blob/client'
 import { getIronSession } from 'iron-session'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
@@ -17,20 +18,35 @@ export async function POST(request: Request) {
   }
 
   try {
-    const body = await request.json() as HandleUploadBody
-    const response = await handleUpload({
+    const body = await request.json() as HandleUploadPresignedBody
+    const response = await handleUploadPresigned({
       body,
       request,
-      onBeforeGenerateToken: async pathname => {
+      getSignedToken: async pathname => {
         if (!pathname.startsWith('images/projects/') && !pathname.startsWith('images/plan/')) {
           throw new Error('Invalid upload path')
         }
+
+        const allowedContentTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif']
+        const maximumSizeInBytes = 30 * 1024 * 1024
+        const validUntil = Date.now() + 15 * 60 * 1000
+
         return {
-          allowedContentTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/avif', 'image/gif'],
-          maximumSizeInBytes: 30 * 1024 * 1024,
-          addRandomSuffix: true,
-          allowOverwrite: false,
-          cacheControlMaxAge: 60 * 60 * 24 * 365,
+          token: await issueSignedToken({
+            pathname,
+            operations: ['put'],
+            allowedContentTypes,
+            maximumSizeInBytes,
+            validUntil,
+          }),
+          urlOptions: {
+            allowedContentTypes,
+            maximumSizeInBytes,
+            validUntil,
+            addRandomSuffix: true,
+            allowOverwrite: false,
+            cacheControlMaxAge: 60 * 60 * 24 * 365,
+          },
         }
       },
     })
