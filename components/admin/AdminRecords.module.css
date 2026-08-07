@@ -1,0 +1,210 @@
+.toolbar {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  min-width: 0;
+}
+
+.search {
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  color: #fff;
+  flex: 1;
+  font-family: var(--font-sans, "DM Sans", sans-serif);
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  min-height: 44px;
+  min-width: 0;
+  outline: none;
+  padding: 0.65rem 0.85rem;
+}
+
+.search:focus {
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+.search::placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.archiveButton {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.45);
+  cursor: pointer;
+  flex: 0 0 auto;
+  font-family: var(--font-sans, "DM Sans", sans-serif);
+  font-size: 0.5rem;
+  letter-spacing: 0.28em;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.card {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  min-width: 0;
+  padding: 1.75rem 2rem;
+}
+
+.recordGrid {
+  align-items: start;
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  min-width: 0;
+}
+
+.recordBlock {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.actions,
+.eventActions {
+  align-items: center;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.eventActions {
+  align-items: flex-end;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.inlineEvent {
+  background: #111;
+  border: 1px solid #222;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 0.75rem 1rem;
+}
+
+.inlineEventNotes {
+  grid-column: 1 / -1;
+}
+
+.deleteBackdrop {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 1.25rem;
+  position: fixed;
+  z-index: 100;
+}
+
+.deleteModal {
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-height: calc(100dvh - 2.5rem);
+  max-width: 26.25rem;
+  overflow-y: auto;
+  padding: clamp(1.5rem, 6vw, 2.5rem) clamp(1.25rem, 6vw, 2.75rem);
+  width: 100%;
+}
+
+.deleteActions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+@media (max-width: 900px) {
+  .card {
+    padding: 1.5rem;
+  }
+
+  .recordGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .actions,
+  .eventActions {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 560px) {
+  .toolbar {
+    align-items: stretch;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .archiveButton {
+    letter-spacing: 0.2em;
+    padding-inline: 0.8rem;
+  }
+
+  .card {
+    padding: 1.25rem;
+  }
+
+  .recordGrid,
+  .inlineEvent {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .actions,
+  .eventActions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+  }
+
+  .eventActions > button,
+  .eventActions > select {
+    width: 100%;
+  }
+
+  .eventActions > * {
+    grid-column: 1 / -1;
+  }
+
+  .inlineEventNotes {
+    grid-column: 1;
+  }
+
+  .deleteBackdrop {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .deleteModal {
+    border-bottom: 0;
+    border-left: 0;
+    border-right: 0;
+    max-height: calc(100dvh - env(safe-area-inset-top));
+    max-width: none;
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  }
+
+  .deleteActions > button {
+    flex: 1;
+    min-width: 0;
+    padding-inline: 0.75rem !important;
+  }
+}

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Inquiry, InquiryStatus, InquiryEvent, EventStatus } from '@/types/inquiry'
 import CreateEventModal from './CreateEventModal'
+import styles from './AdminRecords.module.css'
 
 const STATUS_ORDER: InquiryStatus[] = ['pending', 'reviewed']
 
@@ -175,14 +176,7 @@ function InquiryEvents({ inquiryId }: { inquiryId: string }) {
           {events.map((e) => (
             <div
               key={e._id}
-              style={{
-                background: '#111',
-                border: '1px solid #222',
-                padding: '12px 16px',
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr',
-                gap: '16px',
-              }}
+              className={styles.inlineEvent}
             >
               <div>
                 <p style={labelStyle}>Service</p>
@@ -197,7 +191,7 @@ function InquiryEvents({ inquiryId }: { inquiryId: string }) {
                         month: 'short',
                         day: 'numeric',
                       })
-                    : '—'}
+                    : 'Not set'}
                 </p>
               </div>
               <div>
@@ -221,7 +215,7 @@ function InquiryEvents({ inquiryId }: { inquiryId: string }) {
                   </p>
                 )}
               </div>
-              <div style={{ gridColumn: '1 / -1' }}>
+              <div className={styles.inlineEventNotes}>
                 <EventNotes event={e} />
               </div>
             </div>
@@ -258,28 +252,11 @@ function DeleteConfirmModal({
   return (
     <div
       onClick={onClose}
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.85)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 100,
-      }}
+      className={styles.deleteBackdrop}
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: '#0a0a0a',
-          border: '1px solid #2a2a2a',
-          padding: '40px 44px',
-          width: '100%',
-          maxWidth: '420px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '20px',
-        }}
+        className={styles.deleteModal}
       >
         <p style={{ fontFamily: 'var(--font-sans, "DM Sans", sans-serif)', fontSize: '9px', letterSpacing: '0.3em', textTransform: 'uppercase', color: 'rgba(255,80,80,0.8)' }}>
           Delete Inquiry
@@ -311,7 +288,7 @@ function DeleteConfirmModal({
             }}
           />
         </div>
-        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+        <div className={styles.deleteActions}>
           <button onClick={onClose} style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.5)', fontFamily: 'var(--font-sans, "DM Sans", sans-serif)', fontSize: '8px', letterSpacing: '0.3em', textTransform: 'uppercase', padding: '9px 18px', cursor: 'pointer' }}>
             Cancel
           </button>
@@ -436,7 +413,7 @@ function DotsMenu({
             boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
           }}
         >
-          {/* Edit Status — shows submenu inline */}
+          {/* Edit status submenu */}
           <div>
             <button
               onClick={() => setStatusOpen((v) => !v)}
@@ -570,36 +547,19 @@ export default function InquiriesTab({ onEventCreated }: { onEventCreated: () =>
   return (
     <>
       {/* Toolbar */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '24px' }}>
+      <div className={styles.toolbar}>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, email, or service…"
-          style={{
-            flex: 1,
-            background: '#0a0a0a',
-            border: '1px solid #2a2a2a',
-            color: '#fff',
-            fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
-            fontSize: '12px',
-            letterSpacing: '0.05em',
-            padding: '10px 14px',
-            outline: 'none',
-          }}
+          className={styles.search}
         />
         <button
           onClick={() => { setShowArchive((v) => !v); setSearch('') }}
+          className={styles.archiveButton}
           style={{
-            background: 'transparent',
-            border: `1px solid ${showArchive ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)'}`,
-            color: showArchive ? '#fff' : 'rgba(255,255,255,0.4)',
-            fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
-            fontSize: '8px',
-            letterSpacing: '0.3em',
-            textTransform: 'uppercase',
-            padding: '10px 18px',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
+            borderColor: showArchive ? 'rgba(255,255,255,0.4)' : undefined,
+            color: showArchive ? '#fff' : undefined,
           }}
         >
           {showArchive ? '← Active' : 'Archive'}
@@ -613,26 +573,14 @@ export default function InquiriesTab({ onEventCreated }: { onEventCreated: () =>
           {showArchive ? 'No archived inquiries.' : 'No inquiries yet.'}
         </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+        <div className={styles.list}>
           {filtered.map((inquiry) => (
-            <div
-              key={inquiry._id}
-              style={{
-                background: '#0a0a0a',
-                border: '1px solid #1a1a1a',
-                padding: '28px 32px',
-              }}
-            >
+            <div key={inquiry._id} className={styles.card}>
               <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr 1fr auto',
-                  gap: '24px',
-                  alignItems: 'center',
-                }}
+                className={styles.recordGrid}
               >
                 {/* Client */}
-                <div>
+                <div className={styles.recordBlock}>
                   <p style={labelStyle}>Client</p>
                   <p style={valueStyle}>{inquiry.name}</p>
                   <p style={{ ...valueStyle, opacity: 0.5, fontSize: '11px' }}>{inquiry.email}</p>
@@ -645,7 +593,7 @@ export default function InquiriesTab({ onEventCreated }: { onEventCreated: () =>
                 </div>
 
                 {/* Service + Message */}
-                <div>
+                <div className={styles.recordBlock}>
                   <p style={labelStyle}>Service</p>
                   <p style={valueStyle}>{inquiry.service}</p>
                   <p style={{ ...valueStyle, opacity: 0.45, fontSize: '12px', marginTop: '8px' }}>
@@ -656,7 +604,7 @@ export default function InquiriesTab({ onEventCreated }: { onEventCreated: () =>
                 </div>
 
                 {/* Date + Status badge */}
-                <div>
+                <div className={styles.recordBlock}>
                   <p style={labelStyle}>Received</p>
                   <p style={{ ...valueStyle, fontSize: '12px', opacity: 0.6 }}>
                     {new Date(inquiry.createdAt).toLocaleDateString('en-US', {
@@ -683,7 +631,7 @@ export default function InquiriesTab({ onEventCreated }: { onEventCreated: () =>
                 </div>
 
                 {/* Actions */}
-                <div style={{ display: 'flex', flexDirection: 'row', gap: '8px', alignItems: 'center', justifyContent: 'flex-end' }}>
+                <div className={styles.actions}>
                   {!showArchive && (
                     <button
                       onClick={() => setSelectedInquiry(inquiry)}

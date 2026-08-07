@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { InquiryEvent, EventStatus } from '@/types/inquiry'
+import styles from './AdminRecords.module.css'
 
 const STATUS_ORDER: EventStatus[] = ['awaiting_deposit', 'confirmed', 'completed']
 
@@ -260,36 +261,19 @@ export default function EventsTab() {
   return (
     <>
       {/* Toolbar */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'center', marginBottom: '24px' }}>
+      <div className={styles.toolbar}>
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, email, or service…"
-          style={{
-            flex: 1,
-            background: '#0a0a0a',
-            border: '1px solid #2a2a2a',
-            color: '#fff',
-            fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
-            fontSize: '12px',
-            letterSpacing: '0.05em',
-            padding: '10px 14px',
-            outline: 'none',
-          }}
+          className={styles.search}
         />
         <button
           onClick={() => { setShowArchive((v) => !v); setSearch('') }}
+          className={styles.archiveButton}
           style={{
-            background: 'transparent',
-            border: `1px solid ${showArchive ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.15)'}`,
-            color: showArchive ? '#fff' : 'rgba(255,255,255,0.4)',
-            fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
-            fontSize: '8px',
-            letterSpacing: '0.3em',
-            textTransform: 'uppercase',
-            padding: '10px 18px',
-            cursor: 'pointer',
-            whiteSpace: 'nowrap',
+            borderColor: showArchive ? 'rgba(255,255,255,0.4)' : undefined,
+            color: showArchive ? '#fff' : undefined,
           }}
         >
           {showArchive ? 'Active' : 'Archive'}
@@ -303,26 +287,19 @@ export default function EventsTab() {
           {showArchive ? 'No archived events.' : 'No events yet. Create one from an inquiry.'}
         </p>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1px' }}>
+        <div className={styles.list}>
           {filtered.map((event) => (
-            <div
-              key={event._id}
-              style={{
-                background: '#0a0a0a',
-                border: '1px solid #1a1a1a',
-                padding: '28px 32px',
-              }}
-            >
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto', gap: '24px', alignItems: 'start' }}>
+            <div key={event._id} className={styles.card}>
+            <div className={styles.recordGrid}>
               {/* Client */}
-              <div>
+              <div className={styles.recordBlock}>
                 <p style={labelStyle}>Client</p>
                 <p style={valueStyle}>{event.clientName}</p>
                 <p style={{ ...valueStyle, opacity: 0.5, fontSize: '11px' }}>{event.clientEmail}</p>
               </div>
 
               {/* Service + Date */}
-              <div>
+              <div className={styles.recordBlock}>
                 <p style={labelStyle}>Service</p>
                 <p style={valueStyle}>{event.service}</p>
                 {event.date && (
@@ -342,7 +319,7 @@ export default function EventsTab() {
               </div>
 
               {/* Deposit + Invoice */}
-              <div>
+              <div className={styles.recordBlock}>
                 <p style={labelStyle}>Deposit</p>
                 <span
                   style={{
@@ -387,7 +364,7 @@ export default function EventsTab() {
               </div>
 
               {/* Actions */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end' }}>
+              <div className={styles.eventActions}>
                 {!showArchive && (
                   <>
                     <StatusSelect

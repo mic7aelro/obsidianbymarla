@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react'
 import type { Inquiry } from '@/types/inquiry'
+import styles from './CreateEventModal.module.css'
 
 const inputStyle: React.CSSProperties = {
   background: 'transparent',
@@ -71,54 +72,20 @@ export default function CreateEventModal({
   }
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0,0,0,0.85)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 100,
-      }}
-      onClick={onClose}
-    >
+    <div className={styles.backdrop} onClick={onClose}>
       <div
-        style={{
-          background: '#0a0a0a',
-          border: '1px solid rgba(255,255,255,0.1)',
-          padding: '48px',
-          width: '100%',
-          maxWidth: '480px',
-        }}
+        className={styles.modal}
         onClick={(e) => e.stopPropagation()}
       >
-        <h2
-          style={{
-            fontFamily: 'var(--font-display, Georgia, serif)',
-            fontSize: '20px',
-            fontWeight: 300,
-            letterSpacing: '0.1em',
-            textTransform: 'uppercase',
-            color: '#fff',
-            margin: '0 0 8px',
-          }}
-        >
+        <h2 className={styles.title}>
           Create Event
         </h2>
-        <p
-          style={{
-            fontFamily: 'var(--font-sans, "DM Sans", sans-serif)',
-            fontSize: '12px',
-            opacity: 0.45,
-            margin: '0 0 40px',
-          }}
-        >
-          {inquiry.name} — {inquiry.service}
+        <p className={styles.context}>
+          {inquiry.name}, {inquiry.service}
         </p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.dateGrid}>
             <div>
               <label style={labelStyle}>Date (optional)</label>
               <input
@@ -170,7 +137,7 @@ export default function CreateEventModal({
             </p>
           )}
 
-          <div style={{ display: 'flex', gap: '12px' }}>
+          <div className={styles.actions}>
             <button
               type="submit"
               disabled={loading}
