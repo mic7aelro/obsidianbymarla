@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getIronSession } from 'iron-session'
 import type { SessionData } from '@/lib/session'
+import { REMEMBER_ME_TTL_SECONDS } from '@/lib/session-constants'
 
 const sessionOptions = {
   password: process.env.SESSION_SECRET!,
   cookieName: 'marla_admin_session',
+  ttl: REMEMBER_ME_TTL_SECONDS,
   cookieOptions: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,

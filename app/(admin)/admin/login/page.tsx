@@ -1,14 +1,24 @@
 'use client'
 
-import { useState, type CSSProperties, type FormEvent } from 'react'
+import { useEffect, useState, type CSSProperties, type FormEvent } from 'react'
 
 type Step = 'email' | 'code'
+
+const REMEMBERED_EMAIL_KEY = 'admin_remembered_email'
 
 const labelStyle: CSSProperties = {
   color: 'rgba(242,240,236,0.48)',
   fontFamily: 'var(--font-sans)',
   fontSize: '9px',
   letterSpacing: '0.35em',
+  textTransform: 'uppercase',
+}
+
+const checkboxLabelStyle: CSSProperties = {
+  color: 'rgba(242,240,236,0.72)',
+  fontFamily: 'var(--font-sans)',
+  fontSize: '10px',
+  letterSpacing: '0.15em',
   textTransform: 'uppercase',
 }
 
@@ -45,6 +55,12 @@ export default function AdminLoginPage() {
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
+  const [remember, setRemember] = useState(true)
+
+  useEffect(() => {
+    const savedEmail = window.localStorage.getItem(REMEMBERED_EMAIL_KEY)
+    if (savedEmail) setEmail(savedEmail)
+  }, [])
 
   async function requestCode(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -82,13 +98,19 @@ export default function AdminLoginPage() {
       const response = await fetch('/api/admin/login/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({ email, code, remember }),
       })
       const data = await response.json().catch(() => ({}))
 
       if (!response.ok) {
         setError(data.error ?? 'The code could not be verified.')
         return
+      }
+
+      if (remember) {
+        window.localStorage.setItem(REMEMBERED_EMAIL_KEY, email)
+      } else {
+        window.localStorage.removeItem(REMEMBERED_EMAIL_KEY)
       }
 
       const adminHost = window.location.hostname.startsWith('admin.')
@@ -195,6 +217,44 @@ export default function AdminLoginPage() {
                 style={inputStyle}
               />
             </div>
+
+            <button
+              type="button"
+              role="checkbox"
+              aria-checked={remember}
+              onClick={() => setRemember(value => !value)}
+              style={{
+                alignItems: 'center',
+                background: 'transparent',
+                border: 0,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                gap: '0.6rem',
+                justifySelf: 'start',
+                padding: 0,
+              }}
+            >
+              <span
+                aria-hidden="true"
+                style={{
+                  alignItems: 'center',
+                  background: remember ? '#f2f0ec' : 'transparent',
+                  border: '1px solid rgba(242,240,236,0.4)',
+                  borderRadius: 0,
+                  color: '#050505',
+                  display: 'inline-flex',
+                  flexShrink: 0,
+                  fontSize: '10px',
+                  height: '14px',
+                  justifyContent: 'center',
+                  lineHeight: 1,
+                  width: '14px',
+                }}
+              >
+                {remember ? '✓' : ''}
+              </span>
+              <span style={checkboxLabelStyle}>Keep me signed in</span>
+            </button>
 
             {error && (
               <p role="alert" style={{ color: '#ffaaa0', fontFamily: 'var(--font-sans)', fontSize: '12px', lineHeight: 1.6 }}>
