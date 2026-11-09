@@ -249,6 +249,39 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ ok: true })
   }
 
+  // Takes the photo out of a post but keeps its spot in the grid as a blank space
+  if (action === 'clearMedia') {
+    const id = typeof body.id === 'string' ? body.id : ''
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json({ error: 'Invalid draft.' }, { status: 400 })
+    }
+
+    const objectId = new ObjectId(id)
+    const existing = await posts.findOne({ _id: objectId })
+    if (!existing) return NextResponse.json({ error: 'Draft not found.' }, { status: 404 })
+
+    const cleared = {
+      placeholder: true,
+      mediaUrl: '',
+      width: 1080,
+      height: 1350,
+      fileName: 'Blank space',
+      updatedAt: new Date(),
+    }
+    await posts.updateOne({ _id: objectId }, { $set: cleared })
+
+    if (validBlobUrl(existing.mediaUrl)) {
+      try {
+        await del(existing.mediaUrl)
+      } catch (error) {
+        // The slot is already blank; a leftover file is harmless
+        console.error('[plan] Could not delete cleared media:', error)
+      }
+    }
+
+    return NextResponse.json({ draft: serializePost({ ...existing, ...cleared, _id: objectId }) })
+  }
+
   // Puts a photo into a blank space, or swaps the photo on an existing post
   if (action === 'media') {
     const id = typeof body.id === 'string' ? body.id : ''

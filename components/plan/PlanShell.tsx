@@ -477,11 +477,32 @@ export default function PlanShell() {
     }
   }
 
-  async function deleteDraft() {
+  // The panel's x: a post loses its photo but keeps its spot as a blank;
+  // a blank (no photo left to take out) is removed from the plan
+  async function removeSelected() {
     if (!selectedDraft || deleting) return
+    const draftId = selectedDraft.id
     setDeleting(true)
     try {
-      await removeDraft(selectedDraft.id)
+      if (selectedDraft.placeholder) {
+        await removeDraft(draftId)
+        return
+      }
+
+      setError('')
+      const response = await fetch('/api/plan', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'clearMedia', id: draftId }),
+      })
+      if (handleUnauthorized(response)) return
+      const data = await response.json() as { draft?: PlanDraft; error?: string }
+      if (!response.ok || !data.draft) throw new Error(data.error ?? 'The photo could not be removed.')
+      setDrafts(previous => previous.map(draft => draft.id === draftId ? data.draft! : draft))
+      clearLocalPreview(draftId)
+      setConfirmingRemove(false)
+    } catch (clearError) {
+      setError(clearError instanceof Error ? clearError.message : 'The photo could not be removed.')
     } finally {
       setDeleting(false)
     }
@@ -770,9 +791,14 @@ export default function PlanShell() {
                 {selectedUploading && <span className={styles.uploadingVeil} aria-label="Uploading photo" />}
 
                 {confirmingRemove ? (
-                  <div className={styles.removeConfirm} role="alertdialog" aria-label="Remove from plan?">
-                    <p>Remove from plan?</p>
-                    <button type="button" className={styles.removeConfirmYes} onClick={() => void deleteDraft()} disabled={deleting}>
+                  <div
+                    className={styles.removeConfirm}
+                    role="alertdialog"
+                    aria-label={selectedDraft.placeholder ? 'Remove blank space?' : 'Remove photo?'}
+                  >
+                    <p>{selectedDraft.placeholder ? 'Remove blank space?' : 'Remove photo?'}</p>
+                    {!selectedDraft.placeholder && <small>The spot stays as a blank</small>}
+                    <button type="button" className={styles.removeConfirmYes} onClick={() => void removeSelected()} disabled={deleting}>
                       {deleting ? 'Removing' : 'Remove'}
                     </button>
                     <button type="button" onClick={() => setConfirmingRemove(false)} disabled={deleting}>
@@ -783,7 +809,7 @@ export default function PlanShell() {
                   <button
                     type="button"
                     className={styles.removeChip}
-                    aria-label={selectedDraft.placeholder ? 'Remove this blank space' : 'Remove this planned post'}
+                    aria-label={selectedDraft.placeholder ? 'Remove this blank space' : 'Remove this photo'}
                     onClick={() => setConfirmingRemove(true)}
                   >
                     <X size={14} weight="bold" />
