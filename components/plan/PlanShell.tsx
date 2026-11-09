@@ -129,7 +129,9 @@ export default function PlanShell() {
   const [refreshingFeed, setRefreshingFeed] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [addingBlank, setAddingBlank] = useState(false)
-  const [replacingMedia, setReplacingMedia] = useState(false)
+  // Photos being uploaded into a square, and the local copy shown there meanwhile
+  const [uploadingIds, setUploadingIds] = useState<Set<string>>(() => new Set())
+  const [localPreviews, setLocalPreviews] = useState<Record<string, string>>({})
   const [uploadStatus, setUploadStatus] = useState('')
   const [error, setError] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -141,6 +143,11 @@ export default function PlanShell() {
   const [reducedMotion, setReducedMotion] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const replaceInputRef = useRef<HTMLInputElement>(null)
+  const photoTargetRef = useRef<string | null>(null)
+  // On iPhone, releasing a long press can land as a tap on whatever slid under the
+  // finger, so ignore select/photo taps right after a drag or right after the panel opens
+  const lastDragEndRef = useRef(0)
+  const panelOpenedAtRef = useRef(0)
   const previewTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   const sensors = useSensors(
@@ -154,6 +161,7 @@ export default function PlanShell() {
     () => drafts.find(draft => draft.id === selectedId) ?? null,
     [drafts, selectedId],
   )
+  const selectedUploading = selectedDraft ? uploadingIds.has(selectedDraft.id) : false
   const activeDraft = drafts.find(draft => draft.id === activeId) ?? null
 
   const closePreview = useCallback(() => {
@@ -171,6 +179,7 @@ export default function PlanShell() {
 
   useEffect(() => {
     setCaption(selectedDraft?.caption ?? '')
+    panelOpenedAtRef.current = performance.now()
   }, [selectedDraft])
 
   useEffect(() => {
@@ -288,14 +297,45 @@ export default function PlanShell() {
     }
   }
 
-  // Fills a blank space with a photo, or swaps the photo on a planned post
+  const clearLocalPreview = useCallback((draftId: string) => {
+    setLocalPreviews(previous => {
+      if (!previous[draftId]) return previous
+      URL.revokeObjectURL(previous[draftId])
+      const next = { ...previous }
+      delete next[draftId]
+      return next
+    })
+  }, [])
+
+  function setUploadingFor(draftId: string, uploadingNow: boolean) {
+    setUploadingIds(previous => {
+      const next = new Set(previous)
+      if (uploadingNow) next.add(draftId)
+      else next.delete(draftId)
+      return next
+    })
+  }
+
+  function pickPhotoFor(draftId: string) {
+    photoTargetRef.current = draftId
+    replaceInputRef.current?.click()
+  }
+
+  // Fills a blank space with a photo, or swaps the photo on a planned post. The picked
+  // file shows in the square right away; the uploaded copy replaces it once it loads.
   async function replaceMedia(incoming: FileList | null) {
     const file = Array.from(incoming ?? []).find(isImageCandidate)
-    if (!file || !selectedDraft || replacingMedia) return
-    const draftId = selectedDraft.id
+    const draftId = photoTargetRef.current
+    if (replaceInputRef.current) replaceInputRef.current.value = ''
+    photoTargetRef.current = null
+    if (!file || !draftId || uploadingIds.has(draftId)) return
 
     setError('')
-    setReplacingMedia(true)
+    setUploadingFor(draftId, true)
+    setLocalPreviews(previous => {
+      if (previous[draftId]) URL.revokeObjectURL(previous[draftId])
+      return { ...previous, [draftId]: URL.createObjectURL(file) }
+    })
     try {
       const image = await uploadImage(await normalizeImage(file), `images/plan/${Date.now()}-${draftId}`)
       const response = await fetch('/api/plan', {
@@ -308,11 +348,16 @@ export default function PlanShell() {
       if (!response.ok || !data.draft) throw new Error(data.error ?? 'The photo could not be added.')
       setDrafts(previous => previous.map(draft => draft.id === draftId ? data.draft! : draft))
     } catch (replaceError) {
+      clearLocalPreview(draftId)
       setError(replaceError instanceof Error ? replaceError.message : 'The photo could not be added.')
     } finally {
-      setReplacingMedia(false)
-      if (replaceInputRef.current) replaceInputRef.current.value = ''
+      setUploadingFor(draftId, false)
     }
+  }
+
+  function choosePhoto() {
+    if (!selectedDraft || performance.now() - panelOpenedAtRef.current < 500) return
+    pickPhotoFor(selectedDraft.id)
   }
 
   async function addPlaceholder() {
@@ -357,6 +402,7 @@ export default function PlanShell() {
   }
 
   function finishDrag(event: DragEndEvent) {
+    lastDragEndRef.current = performance.now()
     setActiveId(null)
     if (!event.over || event.active.id === event.over.id) return
     const from = drafts.findIndex(draft => draft.id === event.active.id)
@@ -412,6 +458,23 @@ export default function PlanShell() {
     }
   }
 
+  async function removeDraft(draftId: string) {
+    setError('')
+    try {
+      const response = await fetch(`/api/plan?id=${encodeURIComponent(draftId)}`, {
+        method: 'DELETE',
+      })
+      if (handleUnauthorized(response)) return
+      const data = await response.json() as { error?: string }
+      if (!response.ok) throw new Error(data.error ?? 'The planned post could not be removed.')
+      setDrafts(previous => previous.filter(draft => draft.id !== draftId))
+      setSelectedId(current => current === draftId ? null : current)
+      clearLocalPreview(draftId)
+    } catch (deleteError) {
+      setError(deleteError instanceof Error ? deleteError.message : 'The planned post could not be removed.')
+    }
+  }
+
   async function deleteDraft() {
     if (!selectedDraft || deleting) return
     const confirmed = window.confirm(
@@ -420,18 +483,8 @@ export default function PlanShell() {
     if (!confirmed) return
 
     setDeleting(true)
-    setError('')
     try {
-      const response = await fetch(`/api/plan?id=${encodeURIComponent(selectedDraft.id)}`, {
-        method: 'DELETE',
-      })
-      if (handleUnauthorized(response)) return
-      const data = await response.json() as { error?: string }
-      if (!response.ok) throw new Error(data.error ?? 'The planned post could not be removed.')
-      setDrafts(previous => previous.filter(draft => draft.id !== selectedDraft.id))
-      setSelectedId(null)
-    } catch (deleteError) {
-      setError(deleteError instanceof Error ? deleteError.message : 'The planned post could not be removed.')
+      await removeDraft(selectedDraft.id)
     } finally {
       setDeleting(false)
     }
@@ -516,6 +569,13 @@ export default function PlanShell() {
             className={styles.fileInput}
             onChange={event => void addFiles(event.target.files)}
           />
+          <input
+            ref={replaceInputRef}
+            type="file"
+            accept={ACCEPTED_IMAGES}
+            className={styles.fileInput}
+            onChange={event => void replaceMedia(event.target.files)}
+          />
 
           <p className={styles.sequenceNote}>
             The planned post nearest the published feed is the next one to share.
@@ -577,7 +637,10 @@ export default function PlanShell() {
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragStart={startDrag}
-              onDragCancel={() => setActiveId(null)}
+              onDragCancel={() => {
+                lastDragEndRef.current = performance.now()
+                setActiveId(null)
+              }}
               onDragEnd={finishDrag}
             >
               <SortableContext items={drafts.map(draft => draft.id)} strategy={rectSortingStrategy}>
@@ -593,7 +656,19 @@ export default function PlanShell() {
                       index={index}
                       selected={draft.id === selectedId}
                       reducedMotion={reducedMotion}
-                      onSelect={() => setSelectedId(current => current === draft.id ? null : draft.id)}
+                      localPreview={localPreviews[draft.id]}
+                      uploading={uploadingIds.has(draft.id)}
+                      onSelect={() => {
+                        if (performance.now() - lastDragEndRef.current < 400) return
+                        // Blank squares go straight to the photo picker; no panel in between
+                        if (draft.placeholder) {
+                          pickPhotoFor(draft.id)
+                          return
+                        }
+                        setSelectedId(current => current === draft.id ? null : draft.id)
+                      }}
+                      onRemove={() => removeDraft(draft.id)}
+                      onPreviewSettled={() => clearLocalPreview(draft.id)}
                     />
                   ))}
 
@@ -669,22 +744,14 @@ export default function PlanShell() {
                 <button type="button" onClick={() => setSelectedId(null)}>Close</button>
               </div>
 
-              <input
-                ref={replaceInputRef}
-                type="file"
-                accept={ACCEPTED_IMAGES}
-                className={styles.fileInput}
-                onChange={event => void replaceMedia(event.target.files)}
-              />
-
               {selectedDraft.placeholder ? (
                 <button
                   type="button"
                   className={`${styles.editorImage} ${styles.addPhotoTile}`}
-                  onClick={() => replaceInputRef.current?.click()}
-                  disabled={replacingMedia}
+                  onClick={choosePhoto}
+                  disabled={selectedUploading}
                 >
-                  <span>{replacingMedia ? 'Adding photo' : 'Tap to add a photo'}</span>
+                  <span>{selectedUploading ? 'Adding photo' : 'Tap to add a photo'}</span>
                 </button>
               ) : (
                 <Image
@@ -713,10 +780,10 @@ export default function PlanShell() {
               <button
                 type="button"
                 className={styles.secondaryButton}
-                onClick={() => replaceInputRef.current?.click()}
-                disabled={replacingMedia}
+                onClick={choosePhoto}
+                disabled={selectedUploading}
               >
-                {replacingMedia
+                {selectedUploading
                   ? 'Uploading photo'
                   : selectedDraft.placeholder ? 'Add photo' : 'Replace photo'}
               </button>
