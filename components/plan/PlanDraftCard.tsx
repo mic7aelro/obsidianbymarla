@@ -14,7 +14,11 @@ interface PlanDraftCardProps {
   index: number
   selected: boolean
   reducedMotion: boolean
+  // Object URL of a just-picked photo, shown until the uploaded copy has loaded
+  localPreview?: string
+  uploading: boolean
   onSelect: () => void
+  onPreviewSettled: () => void
 }
 
 export default function PlanDraftCard({
@@ -22,7 +26,10 @@ export default function PlanDraftCard({
   index,
   selected,
   reducedMotion,
+  localPreview,
+  uploading,
   onSelect,
+  onPreviewSettled,
 }: PlanDraftCardProps) {
   const {
     attributes,
@@ -39,6 +46,8 @@ export default function PlanDraftCard({
       : { duration: 260, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
   })
 
+  const label = draft.placeholder ? `blank space ${index + 1}` : `planned post ${index + 1}`
+
   return (
     <article
       ref={setNodeRef}
@@ -46,7 +55,7 @@ export default function PlanDraftCard({
       style={{ transform: CSS.Transform.toString(transform), transition }}
     >
       {draft.placeholder ? (
-        <span className={styles.placeholderFill} aria-hidden="true" />
+        !localPreview && <span className={styles.placeholderFill} aria-hidden="true" />
       ) : (
         <Image
           src={draft.mediaUrl}
@@ -56,16 +65,24 @@ export default function PlanDraftCard({
           sizes={DRAFT_IMAGE_SIZES}
           draggable={false}
           className={styles.media}
+          onLoad={() => {
+            if (localPreview && !uploading) onPreviewSettled()
+          }}
         />
       )}
+
+      {localPreview && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={localPreview} alt="" draggable={false} className={`${styles.media} ${styles.localPreview}`} />
+      )}
+
+      {uploading && <span className={styles.uploadingVeil} aria-label="Uploading photo" />}
 
       <button
         ref={setActivatorNodeRef}
         type="button"
         className={styles.selectDraft}
-        aria-label={draft.placeholder
-          ? `Edit or move blank space ${index + 1}`
-          : `Edit or move planned post ${index + 1}`}
+        aria-label={draft.placeholder ? `Add a photo to ${label}, or hold to move` : `Edit or move ${label}`}
         onClick={onSelect}
         {...attributes}
         {...listeners}

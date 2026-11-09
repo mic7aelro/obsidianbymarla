@@ -291,6 +291,109 @@
   cursor: grab;
   inset: 0;
   position: absolute;
+  z-index: 3;
+}
+
+/* Just-picked photo shown in its square while the upload finishes */
+.localPreview {
+  inset: 0;
+  position: absolute;
+  z-index: 1;
+}
+
+.uploadingVeil {
+  background: rgba(5, 5, 5, 0.45);
+  inset: 0;
+  position: absolute;
+  z-index: 2;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .uploadingVeil {
+    animation: plan-pulse 1.4s ease-in-out infinite alternate;
+  }
+}
+
+@keyframes plan-pulse {
+  from { opacity: 1; }
+  to { opacity: 0.35; }
+}
+
+.removeChip {
+  align-items: center;
+  background: rgba(5, 5, 5, 0.72);
+  border: 0;
+  border-radius: 0;
+  color: #f2f0ec;
+  cursor: pointer;
+  display: flex;
+  height: 2rem;
+  justify-content: center;
+  padding: 0;
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  width: 2rem;
+  z-index: 4;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Bigger invisible hit area than the visible chip, for thumbs */
+.removeChip::before {
+  content: '';
+  inset: -0.5rem;
+  position: absolute;
+}
+
+.removeChip:hover,
+.removeChip:active {
+  background: rgba(5, 5, 5, 0.92);
+}
+
+.removeConfirm {
+  align-items: stretch;
+  background: rgba(5, 5, 5, 0.88);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  inset: 0;
+  justify-content: center;
+  padding: 0.6rem;
+  position: absolute;
+  z-index: 5;
+}
+
+.removeConfirm p {
+  color: #f2f0ec;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 300;
+  margin-bottom: 0.2rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.removeConfirm button {
+  background: transparent;
+  border: 1px solid rgba(242, 240, 236, 0.3);
+  border-radius: 0;
+  color: #f2f0ec;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.52rem;
+  letter-spacing: 0.2em;
+  min-height: 2.2rem;
+  text-transform: uppercase;
+}
+
+.removeConfirm .removeConfirmYes {
+  background: #f2f0ec;
+  border-color: #f2f0ec;
+  color: #111;
+}
+
+.removeConfirm button:disabled {
+  opacity: 0.5;
 }
 
 .selectDraft:active {
@@ -475,11 +578,15 @@
   text-transform: uppercase;
 }
 
+.editorMedia {
+  margin-bottom: 1.25rem;
+  position: relative;
+}
+
 .editorImage {
   aspect-ratio: 1;
   display: block;
   height: auto;
-  margin-bottom: 1.25rem;
   object-fit: cover;
   width: 100%;
 }
@@ -689,7 +796,7 @@
 }
 
 .placeholderFill::after {
-  content: 'Blank';
+  content: '+ Add photo';
 }
 
 .editorImage.placeholderFill {
@@ -993,7 +1100,7 @@
     visibility: visible;
   }
 
-  .editorImage {
+  .editorMedia {
     margin-left: auto;
     margin-right: auto;
     max-width: 38dvh;
