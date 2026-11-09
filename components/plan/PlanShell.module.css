@@ -639,6 +639,35 @@
 
 /* Blank space placeholders */
 
+.addPhotoTile {
+  align-items: center;
+  background: #141414;
+  border: 1px dashed rgba(242, 240, 236, 0.28);
+  border-radius: 0;
+  color: rgba(242, 240, 236, 0.7);
+  cursor: pointer;
+  display: flex;
+  font-family: var(--font-sans);
+  font-size: 0.56rem;
+  justify-content: center;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.addPhotoTile:active:not(:disabled),
+.addPhotoTile:hover:not(:disabled) {
+  border-color: rgba(242, 240, 236, 0.6);
+}
+
+.addPhotoTile:disabled {
+  cursor: wait;
+}
+
+.saveCaptionButton {
+  margin-top: 0.6rem;
+}
+
 .placeholderCell {
   background: #141414;
 }

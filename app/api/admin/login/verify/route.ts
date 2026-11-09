@@ -40,6 +40,8 @@ export async function POST(request: Request) {
   }
   session.isLoggedIn = true
   session.email = email
+  session.remember = remember
+  session.refreshedAt = Date.now()
   await session.save()
 
   return NextResponse.json({ ok: true })

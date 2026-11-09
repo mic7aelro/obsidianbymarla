@@ -249,6 +249,46 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ ok: true })
   }
 
+  // Puts a photo into a blank space, or swaps the photo on an existing post
+  if (action === 'media') {
+    const id = typeof body.id === 'string' ? body.id : ''
+    const width = Number(body.width)
+    const height = Number(body.height)
+    const fileName = typeof body.fileName === 'string' ? body.fileName.trim().slice(0, 180) : ''
+    if (
+      !ObjectId.isValid(id) ||
+      !validBlobUrl(body.mediaUrl) ||
+      !Number.isFinite(width) || width < 1 || width > 20_000 ||
+      !Number.isFinite(height) || height < 1 || height > 20_000 ||
+      !fileName
+    ) {
+      return NextResponse.json({ error: 'Invalid image data.' }, { status: 400 })
+    }
+
+    const objectId = new ObjectId(id)
+    const existing = await posts.findOne({ _id: objectId })
+    if (!existing) return NextResponse.json({ error: 'Draft not found.' }, { status: 404 })
+
+    const updatedAt = new Date()
+    await posts.updateOne(
+      { _id: objectId },
+      { $set: { placeholder: false, mediaUrl: body.mediaUrl, width, height, fileName, updatedAt } },
+    )
+
+    if (validBlobUrl(existing.mediaUrl) && existing.mediaUrl !== body.mediaUrl) {
+      try {
+        await del(existing.mediaUrl)
+      } catch (error) {
+        // The new photo is saved; a leftover old file is harmless
+        console.error('[plan] Could not delete replaced media:', error)
+      }
+    }
+
+    return NextResponse.json({
+      draft: serializePost({ ...existing, placeholder: false, mediaUrl: body.mediaUrl, width, height, fileName, updatedAt, _id: objectId }),
+    })
+  }
+
   return NextResponse.json({ error: 'Unknown planner action.' }, { status: 400 })
 }
 
