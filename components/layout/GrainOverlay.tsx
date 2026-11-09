@@ -2,6 +2,7 @@ export default function GrainOverlay() {
   return (
     <div
       aria-hidden="true"
+      className="grain-overlay"
       style={{
         position: 'fixed',
         inset: 0,

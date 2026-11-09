@@ -1,5 +1,7 @@
 export interface PlanDraft {
   id: string
+  // Blank square that holds a spot in the grid; mediaUrl is empty
+  placeholder: boolean
   mediaUrl: string
   width: number
   height: number
