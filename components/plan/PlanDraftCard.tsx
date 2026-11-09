@@ -1,8 +1,6 @@
 'use client'
 
-import { useState } from 'react'
 import Image from 'next/image'
-import { X } from '@phosphor-icons/react'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import type { PlanDraft } from '@/types/plan'
@@ -20,7 +18,6 @@ interface PlanDraftCardProps {
   localPreview?: string
   uploading: boolean
   onSelect: () => void
-  onRemove: () => Promise<void>
   onPreviewSettled: () => void
 }
 
@@ -32,11 +29,8 @@ export default function PlanDraftCard({
   localPreview,
   uploading,
   onSelect,
-  onRemove,
   onPreviewSettled,
 }: PlanDraftCardProps) {
-  const [confirming, setConfirming] = useState(false)
-  const [removing, setRemoving] = useState(false)
   const {
     attributes,
     listeners,
@@ -51,16 +45,6 @@ export default function PlanDraftCard({
       ? null
       : { duration: 260, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' },
   })
-
-  async function remove() {
-    setRemoving(true)
-    try {
-      await onRemove()
-    } finally {
-      setRemoving(false)
-      setConfirming(false)
-    }
-  }
 
   const label = draft.placeholder ? `blank space ${index + 1}` : `planned post ${index + 1}`
 
@@ -103,29 +87,6 @@ export default function PlanDraftCard({
         {...attributes}
         {...listeners}
       />
-
-      {!confirming && !isDragging && (
-        <button
-          type="button"
-          className={styles.removeChip}
-          aria-label={`Remove ${label}`}
-          onClick={() => setConfirming(true)}
-        >
-          <X size={12} weight="bold" />
-        </button>
-      )}
-
-      {confirming && (
-        <div className={styles.removeConfirm} role="alertdialog" aria-label={`Remove ${label}?`}>
-          <p>Remove?</p>
-          <button type="button" className={styles.removeConfirmYes} onClick={() => void remove()} disabled={removing}>
-            {removing ? 'Removing' : 'Remove'}
-          </button>
-          <button type="button" onClick={() => setConfirming(false)} disabled={removing}>
-            Keep
-          </button>
-        </div>
-      )}
     </article>
   )
 }

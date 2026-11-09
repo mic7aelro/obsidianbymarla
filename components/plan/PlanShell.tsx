@@ -138,6 +138,7 @@ export default function PlanShell() {
   const [caption, setCaption] = useState('')
   const [savingCaption, setSavingCaption] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [confirmingRemove, setConfirmingRemove] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(null)
   const [previewMedia, setPreviewMedia] = useState<InstagramMedia | null>(null)
   const [reducedMotion, setReducedMotion] = useState(false)
@@ -180,6 +181,7 @@ export default function PlanShell() {
   useEffect(() => {
     setCaption(selectedDraft?.caption ?? '')
     panelOpenedAtRef.current = performance.now()
+    setConfirmingRemove(false)
   }, [selectedDraft])
 
   useEffect(() => {
@@ -477,11 +479,6 @@ export default function PlanShell() {
 
   async function deleteDraft() {
     if (!selectedDraft || deleting) return
-    const confirmed = window.confirm(
-      selectedDraft.placeholder ? 'Remove this blank space?' : 'Remove this planned post and its uploaded image?',
-    )
-    if (!confirmed) return
-
     setDeleting(true)
     try {
       await removeDraft(selectedDraft.id)
@@ -660,14 +657,15 @@ export default function PlanShell() {
                       uploading={uploadingIds.has(draft.id)}
                       onSelect={() => {
                         if (performance.now() - lastDragEndRef.current < 400) return
-                        // Blank squares go straight to the photo picker; no panel in between
+                        // Blank squares go straight to the photo picker, with the panel opening
+                        // behind it so a picked photo (or a cancel) lands on caption and remove
                         if (draft.placeholder) {
+                          setSelectedId(draft.id)
                           pickPhotoFor(draft.id)
                           return
                         }
                         setSelectedId(current => current === draft.id ? null : draft.id)
                       }}
-                      onRemove={() => removeDraft(draft.id)}
                       onPreviewSettled={() => clearLocalPreview(draft.id)}
                     />
                   ))}
@@ -744,26 +742,54 @@ export default function PlanShell() {
                 <button type="button" onClick={() => setSelectedId(null)}>Close</button>
               </div>
 
-              {selectedDraft.placeholder ? (
-                <button
-                  type="button"
-                  className={`${styles.editorImage} ${styles.addPhotoTile}`}
-                  onClick={choosePhoto}
-                  disabled={selectedUploading}
-                >
-                  <span>{selectedUploading ? 'Adding photo' : 'Tap to add a photo'}</span>
-                </button>
-              ) : (
-                <Image
-                  key={selectedDraft.id}
-                  src={selectedDraft.mediaUrl}
-                  alt="Selected planned post"
-                  width={selectedDraft.width}
-                  height={selectedDraft.height}
-                  sizes="(max-width: 1180px) 88vw, 22rem"
-                  className={styles.editorImage}
-                />
-              )}
+              <div className={styles.editorMedia}>
+                {localPreviews[selectedDraft.id] ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={localPreviews[selectedDraft.id]} alt="" className={styles.editorImage} />
+                ) : selectedDraft.placeholder ? (
+                  <button
+                    type="button"
+                    className={`${styles.editorImage} ${styles.addPhotoTile}`}
+                    onClick={choosePhoto}
+                    disabled={selectedUploading}
+                  >
+                    <span>Tap to add a photo</span>
+                  </button>
+                ) : (
+                  <Image
+                    key={selectedDraft.id}
+                    src={selectedDraft.mediaUrl}
+                    alt="Selected planned post"
+                    width={selectedDraft.width}
+                    height={selectedDraft.height}
+                    sizes="(max-width: 1180px) 88vw, 22rem"
+                    className={styles.editorImage}
+                  />
+                )}
+
+                {selectedUploading && <span className={styles.uploadingVeil} aria-label="Uploading photo" />}
+
+                {confirmingRemove ? (
+                  <div className={styles.removeConfirm} role="alertdialog" aria-label="Remove from plan?">
+                    <p>Remove from plan?</p>
+                    <button type="button" className={styles.removeConfirmYes} onClick={() => void deleteDraft()} disabled={deleting}>
+                      {deleting ? 'Removing' : 'Remove'}
+                    </button>
+                    <button type="button" onClick={() => setConfirmingRemove(false)} disabled={deleting}>
+                      Keep
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className={styles.removeChip}
+                    aria-label={selectedDraft.placeholder ? 'Remove this blank space' : 'Remove this planned post'}
+                    onClick={() => setConfirmingRemove(true)}
+                  >
+                    <X size={14} weight="bold" />
+                  </button>
+                )}
+              </div>
 
               <div className={styles.captionField}>
                 <label htmlFor="plan-caption">Caption</label>
@@ -795,14 +821,6 @@ export default function PlanShell() {
                 disabled={savingCaption || caption.trim() === selectedDraft.caption}
               >
                 {savingCaption ? 'Saving caption' : 'Save caption'}
-              </button>
-              <button
-                type="button"
-                className={styles.deleteButton}
-                onClick={deleteDraft}
-                disabled={deleting}
-              >
-                {deleting ? 'Removing' : 'Remove from plan'}
               </button>
             </>
           ) : (
