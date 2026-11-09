@@ -13,6 +13,7 @@ const MAX_DRAFTS = 60
 
 interface PlanPostDocument {
   _id?: ObjectId
+  placeholder?: boolean
   mediaUrl: string
   width: number
   height: number
@@ -49,6 +50,7 @@ async function collections(): Promise<{
 function serializePost(post: PlanPostDocument & { _id: ObjectId }): PlanDraft {
   return {
     id: post._id.toHexString(),
+    placeholder: Boolean(post.placeholder),
     mediaUrl: post.mediaUrl,
     width: post.width,
     height: post.height,
@@ -105,13 +107,25 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Invalid request.' }, { status: 400 })
   }
 
+  const now = new Date()
+  const documents: PlanPostDocument[] = []
   const items = Array.isArray(body.items) ? body.items : []
-  if (items.length < 1 || items.length > 12) {
+
+  if (body.placeholder === true) {
+    documents.push({
+      placeholder: true,
+      mediaUrl: '',
+      width: 1080,
+      height: 1350,
+      fileName: 'Blank space',
+      caption: '',
+      createdAt: now,
+      updatedAt: now,
+    })
+  } else if (items.length < 1 || items.length > 12) {
     return NextResponse.json({ error: 'Add between 1 and 12 images.' }, { status: 400 })
   }
 
-  const now = new Date()
-  const documents: PlanPostDocument[] = []
   for (const item of items) {
     if (!item || typeof item !== 'object') {
       return NextResponse.json({ error: 'Invalid image data.' }, { status: 400 })

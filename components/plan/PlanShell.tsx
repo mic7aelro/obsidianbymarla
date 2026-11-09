@@ -76,6 +76,17 @@ function publishedImage(media: InstagramMedia) {
     : media.mediaUrl
 }
 
+// Must match images.remotePatterns in next.config.ts; anything else renders unoptimized
+// instead of throwing, in case Instagram serves media from a new host
+function canOptimize(url: string) {
+  try {
+    const { hostname } = new URL(url)
+    return hostname.endsWith('.cdninstagram.com') || hostname.endsWith('.fbcdn.net')
+  } catch {
+    return false
+  }
+}
+
 function formatDate(value: string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return 'Published post'
@@ -97,6 +108,7 @@ export default function PlanShell() {
   const [loadingFeed, setLoadingFeed] = useState(true)
   const [refreshingFeed, setRefreshingFeed] = useState(false)
   const [uploading, setUploading] = useState(false)
+  const [addingBlank, setAddingBlank] = useState(false)
   const [uploadStatus, setUploadStatus] = useState('')
   const [error, setError] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -269,6 +281,27 @@ export default function PlanShell() {
     }
   }
 
+  async function addPlaceholder() {
+    if (addingBlank) return
+    setError('')
+    setAddingBlank(true)
+    try {
+      const response = await fetch('/api/plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ placeholder: true }),
+      })
+      if (handleUnauthorized(response)) return
+      const data = await response.json() as { drafts?: PlanDraft[]; error?: string }
+      if (!response.ok || !data.drafts) throw new Error(data.error ?? 'The blank space could not be added.')
+      setDrafts(previous => [...data.drafts!, ...previous])
+    } catch (blankError) {
+      setError(blankError instanceof Error ? blankError.message : 'The blank space could not be added.')
+    } finally {
+      setAddingBlank(false)
+    }
+  }
+
   async function saveOrder(nextDrafts: PlanDraft[], previousDrafts: PlanDraft[]) {
     try {
       const response = await fetch('/api/plan', {
@@ -347,7 +380,9 @@ export default function PlanShell() {
 
   async function deleteDraft() {
     if (!selectedDraft || deleting) return
-    const confirmed = window.confirm('Remove this planned post and its uploaded image?')
+    const confirmed = window.confirm(
+      selectedDraft.placeholder ? 'Remove this blank space?' : 'Remove this planned post and its uploaded image?',
+    )
     if (!confirmed) return
 
     setDeleting(true)
@@ -427,6 +462,14 @@ export default function PlanShell() {
             >
               {uploading ? uploadStatus || 'Adding posts' : 'Add posts'}
             </button>
+            <button
+              type="button"
+              className={styles.secondaryButton}
+              onClick={() => void addPlaceholder()}
+              disabled={addingBlank}
+            >
+              Add blank space
+            </button>
             <button type="button" className={styles.secondaryButton} onClick={cycleGridOffset}>
               Shift grid {gridOffset}/2
             </button>
@@ -451,7 +494,16 @@ export default function PlanShell() {
               <h2 id="feed-heading">{instagramUsername ? `@${instagramUsername}` : '@marlizzlle'}</h2>
               <p>{instagramConnected ? 'Planned and published feed' : 'Planned feed preview'}</p>
             </div>
-            <span>{drafts.length > 0 ? `${drafts.length} in plan` : 'No drafts yet'}</span>
+            <dl className={styles.feedStats}>
+              <div>
+                <dd>{drafts.length}</dd>
+                <dt>Planned</dt>
+              </div>
+              <div>
+                <dd>{feed.length}</dd>
+                <dt>Posted</dt>
+              </div>
+            </dl>
           </div>
 
           {error && (
@@ -526,12 +578,12 @@ export default function PlanShell() {
                         setPreviewMedia(item)
                       }}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <Image
                         src={publishedImage(item)}
                         alt={item.caption || `Instagram post from ${formatDate(item.timestamp)}`}
-                        loading="lazy"
-                        decoding="async"
+                        fill
+                        sizes={DRAFT_IMAGE_SIZES}
+                        unoptimized={!canOptimize(publishedImage(item))}
                         className={styles.media}
                       />
                       <span className={styles.publishedBadge} aria-hidden="true">
@@ -545,13 +597,17 @@ export default function PlanShell() {
               <DragOverlay dropAnimation={reducedMotion ? null : undefined}>
                 {activeDraft ? (
                   <div className={styles.dragOverlay}>
-                    <Image
-                      src={activeDraft.mediaUrl}
-                      alt=""
-                      width={activeDraft.width}
-                      height={activeDraft.height}
-                      sizes={DRAFT_IMAGE_SIZES}
-                    />
+                    {activeDraft.placeholder ? (
+                      <span className={styles.placeholderFill} />
+                    ) : (
+                      <Image
+                        src={activeDraft.mediaUrl}
+                        alt=""
+                        width={activeDraft.width}
+                        height={activeDraft.height}
+                        sizes={DRAFT_IMAGE_SIZES}
+                      />
+                    )}
                   </div>
                 ) : null}
               </DragOverlay>
@@ -559,26 +615,39 @@ export default function PlanShell() {
           )}
         </section>
 
+        {selectedDraft && (
+          <button
+            type="button"
+            className={styles.sheetBackdrop}
+            aria-label="Close post details"
+            onClick={() => setSelectedId(null)}
+          />
+        )}
+
         <aside className={`${styles.editorPanel} ${selectedDraft ? styles.editorPanelOpen : ''}`}>
           {selectedDraft ? (
             <>
               <div className={styles.editorHeading}>
                 <div>
-                  <p className={styles.eyebrow}>Planned post</p>
+                  <p className={styles.eyebrow}>{selectedDraft.placeholder ? 'Blank space' : 'Planned post'}</p>
                   <h2>Edit details</h2>
                 </div>
                 <button type="button" onClick={() => setSelectedId(null)}>Close</button>
               </div>
 
-              <Image
-                key={selectedDraft.id}
-                src={selectedDraft.mediaUrl}
-                alt="Selected planned post"
-                width={selectedDraft.width}
-                height={selectedDraft.height}
-                sizes="(max-width: 1180px) 88vw, 22rem"
-                className={styles.editorImage}
-              />
+              {selectedDraft.placeholder ? (
+                <div className={`${styles.editorImage} ${styles.placeholderFill}`} aria-hidden="true" />
+              ) : (
+                <Image
+                  key={selectedDraft.id}
+                  src={selectedDraft.mediaUrl}
+                  alt="Selected planned post"
+                  width={selectedDraft.width}
+                  height={selectedDraft.height}
+                  sizes="(max-width: 1180px) 88vw, 22rem"
+                  className={styles.editorImage}
+                />
+              )}
 
               <div className={styles.captionField}>
                 <label htmlFor="plan-caption">Caption</label>
@@ -606,7 +675,7 @@ export default function PlanShell() {
                 onClick={deleteDraft}
                 disabled={deleting}
               >
-                {deleting ? 'Removing post' : 'Remove from plan'}
+                {deleting ? 'Removing' : 'Remove from plan'}
               </button>
             </>
           ) : (
@@ -617,6 +686,27 @@ export default function PlanShell() {
           )}
         </aside>
       </div>
+
+      <nav className={styles.mobileBar} aria-label="Planner actions">
+        {uploading && <p className={styles.mobileStatus}>{uploadStatus || 'Adding posts'}</p>}
+        <button
+          type="button"
+          className={styles.mobileBarPrimary}
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? 'Adding' : 'Add posts'}
+        </button>
+        <button type="button" onClick={() => void addPlaceholder()} disabled={addingBlank}>
+          Blank
+        </button>
+        <button type="button" onClick={cycleGridOffset}>
+          Shift {gridOffset}/2
+        </button>
+        <button type="button" onClick={() => void loadInstagram(true)} disabled={refreshingFeed}>
+          {refreshingFeed ? 'Loading' : 'Refresh'}
+        </button>
+      </nav>
 
       {previewMedia && (
         <div

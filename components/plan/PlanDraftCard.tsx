@@ -42,24 +42,30 @@ export default function PlanDraftCard({
   return (
     <article
       ref={setNodeRef}
-      className={`${styles.gridCell} ${styles.draftCell} ${selected ? styles.selectedCell : ''} ${isDragging ? styles.draggingCell : ''}`}
+      className={`${styles.gridCell} ${styles.draftCell} ${draft.placeholder ? styles.placeholderCell : ''} ${selected ? styles.selectedCell : ''} ${isDragging ? styles.draggingCell : ''}`}
       style={{ transform: CSS.Transform.toString(transform), transition }}
     >
-      <Image
-        src={draft.mediaUrl}
-        alt={draft.caption || `Planned post ${index + 1}`}
-        width={draft.width}
-        height={draft.height}
-        sizes={DRAFT_IMAGE_SIZES}
-        draggable={false}
-        className={styles.media}
-      />
+      {draft.placeholder ? (
+        <span className={styles.placeholderFill} aria-hidden="true" />
+      ) : (
+        <Image
+          src={draft.mediaUrl}
+          alt={draft.caption || `Planned post ${index + 1}`}
+          width={draft.width}
+          height={draft.height}
+          sizes={DRAFT_IMAGE_SIZES}
+          draggable={false}
+          className={styles.media}
+        />
+      )}
 
       <button
         ref={setActivatorNodeRef}
         type="button"
         className={styles.selectDraft}
-        aria-label={`Edit or move planned post ${index + 1}`}
+        aria-label={draft.placeholder
+          ? `Edit or move blank space ${index + 1}`
+          : `Edit or move planned post ${index + 1}`}
         onClick={onSelect}
         {...attributes}
         {...listeners}
