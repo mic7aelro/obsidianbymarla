@@ -7,6 +7,9 @@ export { REMEMBER_ME_TTL_SECONDS } from '@/lib/session-constants'
 export interface SessionData {
   isLoggedIn: boolean
   email?: string
+  // Set when "keep me signed in" was ticked; only these sessions are extended
+  remember?: boolean
+  refreshedAt?: number
 }
 
 export const sessionOptions: SessionOptions = {
