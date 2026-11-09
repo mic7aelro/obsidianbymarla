@@ -70,6 +70,26 @@ async function imageDimensions(file: File): Promise<{ width: number; height: num
   }
 }
 
+interface UploadedImage {
+  mediaUrl: string
+  width: number
+  height: number
+  fileName: string
+}
+
+async function uploadImage(file: File, pathname: string): Promise<UploadedImage> {
+  const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+  const [blob, dimensions] = await Promise.all([
+    uploadPresigned(`${pathname}.${extension}`, file, {
+      access: 'public',
+      handleUploadUrl: '/api/admin/blob-upload',
+      multipart: file.size > 5 * 1024 * 1024,
+    }),
+    imageDimensions(file),
+  ])
+  return { mediaUrl: blob.url, ...dimensions, fileName: file.name }
+}
+
 function publishedImage(media: InstagramMedia) {
   return media.mediaType === 'VIDEO' && media.thumbnailUrl
     ? media.thumbnailUrl
@@ -109,6 +129,7 @@ export default function PlanShell() {
   const [refreshingFeed, setRefreshingFeed] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [addingBlank, setAddingBlank] = useState(false)
+  const [replacingMedia, setReplacingMedia] = useState(false)
   const [uploadStatus, setUploadStatus] = useState('')
   const [error, setError] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -119,6 +140,7 @@ export default function PlanShell() {
   const [previewMedia, setPreviewMedia] = useState<InstagramMedia | null>(null)
   const [reducedMotion, setReducedMotion] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const replaceInputRef = useRef<HTMLInputElement>(null)
   const previewTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   const sensors = useSensors(
@@ -228,12 +250,7 @@ export default function PlanShell() {
         normalized.push(await normalizeImage(candidates[index]))
       }
 
-      const items: Array<{
-        mediaUrl: string
-        width: number
-        height: number
-        fileName: string
-      }> = new Array(normalized.length)
+      const items: UploadedImage[] = new Array(normalized.length)
 
       const batchId = Date.now()
       let nextIndex = 0
@@ -242,18 +259,8 @@ export default function PlanShell() {
       const uploadNext = async () => {
         while (nextIndex < normalized.length) {
           const index = nextIndex++
-          const file = normalized[index]
-          const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
-          const [blob, dimensions] = await Promise.all([
-            uploadPresigned(`images/plan/${batchId}-${index}.${extension}`, file, {
-              access: 'public',
-              handleUploadUrl: '/api/admin/blob-upload',
-              multipart: file.size > 5 * 1024 * 1024,
-            }),
-            imageDimensions(file),
-          ])
           // Keep the original selection order regardless of which upload finishes first
-          items[index] = { mediaUrl: blob.url, ...dimensions, fileName: file.name }
+          items[index] = await uploadImage(normalized[index], `images/plan/${batchId}-${index}`)
           setUploadStatus(`Uploading ${++finished} of ${normalized.length}`)
         }
       }
@@ -278,6 +285,33 @@ export default function PlanShell() {
       setUploading(false)
       setUploadStatus('')
       if (fileInputRef.current) fileInputRef.current.value = ''
+    }
+  }
+
+  // Fills a blank space with a photo, or swaps the photo on a planned post
+  async function replaceMedia(incoming: FileList | null) {
+    const file = Array.from(incoming ?? []).find(isImageCandidate)
+    if (!file || !selectedDraft || replacingMedia) return
+    const draftId = selectedDraft.id
+
+    setError('')
+    setReplacingMedia(true)
+    try {
+      const image = await uploadImage(await normalizeImage(file), `images/plan/${Date.now()}-${draftId}`)
+      const response = await fetch('/api/plan', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'media', id: draftId, ...image }),
+      })
+      if (handleUnauthorized(response)) return
+      const data = await response.json() as { draft?: PlanDraft; error?: string }
+      if (!response.ok || !data.draft) throw new Error(data.error ?? 'The photo could not be added.')
+      setDrafts(previous => previous.map(draft => draft.id === draftId ? data.draft! : draft))
+    } catch (replaceError) {
+      setError(replaceError instanceof Error ? replaceError.message : 'The photo could not be added.')
+    } finally {
+      setReplacingMedia(false)
+      if (replaceInputRef.current) replaceInputRef.current.value = ''
     }
   }
 
@@ -635,8 +669,23 @@ export default function PlanShell() {
                 <button type="button" onClick={() => setSelectedId(null)}>Close</button>
               </div>
 
+              <input
+                ref={replaceInputRef}
+                type="file"
+                accept={ACCEPTED_IMAGES}
+                className={styles.fileInput}
+                onChange={event => void replaceMedia(event.target.files)}
+              />
+
               {selectedDraft.placeholder ? (
-                <div className={`${styles.editorImage} ${styles.placeholderFill}`} aria-hidden="true" />
+                <button
+                  type="button"
+                  className={`${styles.editorImage} ${styles.addPhotoTile}`}
+                  onClick={() => replaceInputRef.current?.click()}
+                  disabled={replacingMedia}
+                >
+                  <span>{replacingMedia ? 'Adding photo' : 'Tap to add a photo'}</span>
+                </button>
               ) : (
                 <Image
                   key={selectedDraft.id}
@@ -663,7 +712,18 @@ export default function PlanShell() {
 
               <button
                 type="button"
-                className={styles.primaryButton}
+                className={styles.secondaryButton}
+                onClick={() => replaceInputRef.current?.click()}
+                disabled={replacingMedia}
+              >
+                {replacingMedia
+                  ? 'Uploading photo'
+                  : selectedDraft.placeholder ? 'Add photo' : 'Replace photo'}
+              </button>
+
+              <button
+                type="button"
+                className={`${styles.primaryButton} ${styles.saveCaptionButton}`}
                 onClick={saveCaption}
                 disabled={savingCaption || caption.trim() === selectedDraft.caption}
               >
