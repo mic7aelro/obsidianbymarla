@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { uploadPresigned } from '@vercel/blob/client'
 import { InstagramLogo, X } from '@phosphor-icons/react'
@@ -9,7 +10,7 @@ import {
   DndContext,
   DragOverlay,
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
@@ -22,7 +23,7 @@ import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable'
-import PlanDraftCard from './PlanDraftCard'
+import PlanDraftCard, { DRAFT_IMAGE_SIZES } from './PlanDraftCard'
 import type {
   InstagramFeedResponse,
   InstagramMedia,
@@ -30,6 +31,9 @@ import type {
   PlanDraft,
 } from '@/types/plan'
 import styles from './PlanShell.module.css'
+
+const UPLOAD_CONCURRENCY = 3
+const FEED_SKELETON_COUNT = 9
 
 const ACCEPTED_IMAGES = 'image/jpeg,image/png,image/webp,image/avif,image/gif,image/heic,image/heif,.heic,.heif'
 
@@ -56,7 +60,7 @@ async function imageDimensions(file: File): Promise<{ width: number; height: num
   const objectUrl = URL.createObjectURL(file)
   try {
     return await new Promise((resolve, reject) => {
-      const image = new Image()
+      const image = new window.Image()
       image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight })
       image.onerror = () => reject(new Error(`Could not read ${file.name}`))
       image.src = objectUrl
@@ -106,8 +110,9 @@ export default function PlanShell() {
   const previewTriggerRef = useRef<HTMLButtonElement | null>(null)
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 8 } }),
+    // Mouse + Touch (not Pointer) so finger drags don't fight page scrolling on iOS
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 160, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   )
 
@@ -176,7 +181,7 @@ export default function PlanShell() {
     if (refresh) setRefreshingFeed(true)
     else setLoadingFeed(true)
     try {
-      const response = await fetch('/api/plan/instagram', { cache: 'no-store' })
+      const response = await fetch(`/api/plan/instagram${refresh ? '?fresh=1' : ''}`, { cache: 'no-store' })
       if (handleUnauthorized(response)) return
       const data = await response.json() as InstagramFeedResponse & { error?: string }
       if (!response.ok) throw new Error(data.error ?? 'Instagram could not be loaded.')
@@ -216,22 +221,33 @@ export default function PlanShell() {
         width: number
         height: number
         fileName: string
-      }> = []
+      }> = new Array(normalized.length)
 
-      for (let index = 0; index < normalized.length; index++) {
-        const file = normalized[index]
-        const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
-        setUploadStatus(`Uploading ${index + 1} of ${normalized.length}`)
-        const [blob, dimensions] = await Promise.all([
-          uploadPresigned(`images/plan/${Date.now()}-${index}.${extension}`, file, {
-            access: 'public',
-            handleUploadUrl: '/api/admin/blob-upload',
-            multipart: file.size > 5 * 1024 * 1024,
-          }),
-          imageDimensions(file),
-        ])
-        items.push({ mediaUrl: blob.url, ...dimensions, fileName: file.name })
+      const batchId = Date.now()
+      let nextIndex = 0
+      let finished = 0
+      setUploadStatus(`Uploading 0 of ${normalized.length}`)
+      const uploadNext = async () => {
+        while (nextIndex < normalized.length) {
+          const index = nextIndex++
+          const file = normalized[index]
+          const extension = file.name.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg'
+          const [blob, dimensions] = await Promise.all([
+            uploadPresigned(`images/plan/${batchId}-${index}.${extension}`, file, {
+              access: 'public',
+              handleUploadUrl: '/api/admin/blob-upload',
+              multipart: file.size > 5 * 1024 * 1024,
+            }),
+            imageDimensions(file),
+          ])
+          // Keep the original selection order regardless of which upload finishes first
+          items[index] = { mediaUrl: blob.url, ...dimensions, fileName: file.name }
+          setUploadStatus(`Uploading ${++finished} of ${normalized.length}`)
+        }
       }
+      await Promise.all(
+        Array.from({ length: Math.min(UPLOAD_CONCURRENCY, normalized.length) }, uploadNext),
+      )
 
       setUploadStatus('Saving to planner')
       const response = await fetch('/api/plan', {
@@ -455,13 +471,13 @@ export default function PlanShell() {
             </div>
           )}
 
-          {!planLoaded || loadingFeed ? (
+          {!planLoaded ? (
             <div className={styles.feedGrid} aria-label="Loading feed">
               {Array.from({ length: skeletonCount }, (_, index) => (
                 <div className={styles.skeleton} key={index} />
               ))}
             </div>
-          ) : drafts.length === 0 && feed.length === 0 ? (
+          ) : drafts.length === 0 && feed.length === 0 && !loadingFeed ? (
             <button
               type="button"
               className={styles.emptyState}
@@ -495,6 +511,10 @@ export default function PlanShell() {
                     />
                   ))}
 
+                  {loadingFeed && Array.from({ length: FEED_SKELETON_COUNT }, (_, index) => (
+                    <div className={styles.skeleton} key={`feed-skeleton-${index}`} />
+                  ))}
+
                   {feed.map(item => (
                     <button
                       key={item.id}
@@ -511,6 +531,7 @@ export default function PlanShell() {
                         src={publishedImage(item)}
                         alt={item.caption || `Instagram post from ${formatDate(item.timestamp)}`}
                         loading="lazy"
+                        decoding="async"
                         className={styles.media}
                       />
                       <span className={styles.publishedBadge} aria-hidden="true">
@@ -524,8 +545,13 @@ export default function PlanShell() {
               <DragOverlay dropAnimation={reducedMotion ? null : undefined}>
                 {activeDraft ? (
                   <div className={styles.dragOverlay}>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={activeDraft.mediaUrl} alt="" />
+                    <Image
+                      src={activeDraft.mediaUrl}
+                      alt=""
+                      width={activeDraft.width}
+                      height={activeDraft.height}
+                      sizes={DRAFT_IMAGE_SIZES}
+                    />
                   </div>
                 ) : null}
               </DragOverlay>
@@ -544,10 +570,13 @@ export default function PlanShell() {
                 <button type="button" onClick={() => setSelectedId(null)}>Close</button>
               </div>
 
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
+                key={selectedDraft.id}
                 src={selectedDraft.mediaUrl}
                 alt="Selected planned post"
+                width={selectedDraft.width}
+                height={selectedDraft.height}
+                sizes="(max-width: 1180px) 88vw, 22rem"
                 className={styles.editorImage}
               />
 
