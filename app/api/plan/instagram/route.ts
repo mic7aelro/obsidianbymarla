@@ -17,8 +17,12 @@ interface GraphMedia {
 interface GraphResponse {
   data?: GraphMedia[]
   username?: string
-  error?: { message?: string }
+  error?: { message?: string; code?: number }
 }
+
+// Graph error 190 means the token was revoked or expired (e.g. after a password change)
+const TOKEN_EXPIRED_MESSAGE =
+  'Instagram sign-in expired. Generate a new access token and update INSTAGRAM_ACCESS_TOKEN.'
 
 function graphUrl(path: string) {
   const base = (process.env.INSTAGRAM_GRAPH_BASE_URL ?? 'https://graph.instagram.com').replace(/\/$/, '')
@@ -26,14 +30,15 @@ function graphUrl(path: string) {
   return new URL(`${base}/${version}/${path.replace(/^\//, '')}`)
 }
 
-async function graphFetch(url: URL, token: string) {
+async function graphFetch(url: URL, token: string, fresh: boolean) {
   return fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
-    next: { revalidate: 300 },
+    ...(fresh ? { cache: 'no-store' as const } : { next: { revalidate: 300 } }),
   })
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const fresh = new URL(request.url).searchParams.has('fresh')
   const session = await getSession()
   if (!session.isLoggedIn) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -63,13 +68,22 @@ export async function GET() {
 
   try {
     const [mediaResponse, profileResponse] = await Promise.all([
-      graphFetch(mediaUrl, token),
-      graphFetch(profileUrl, token),
+      graphFetch(mediaUrl, token, fresh),
+      graphFetch(profileUrl, token, fresh),
     ])
     const mediaJson = await mediaResponse.json() as GraphResponse
     const profileJson = await profileResponse.json() as GraphResponse
 
     if (!mediaResponse.ok) {
+      if (mediaJson.error?.code === 190) {
+        const response: InstagramFeedResponse = {
+          connected: false,
+          username: process.env.INSTAGRAM_USERNAME ?? null,
+          items: [],
+          message: TOKEN_EXPIRED_MESSAGE,
+        }
+        return NextResponse.json(response)
+      }
       const message = mediaJson.error?.message ?? 'Instagram did not return the feed.'
       return NextResponse.json({ error: message }, { status: 502 })
     }
